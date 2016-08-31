@@ -1,0 +1,103 @@
+---
+layout: post
+status: publish
+published: true
+title: Getting Started With Electron in Visual Studio Code
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 227
+wordpress_url: http://www.mylifeforthecode.com/?p=227
+date: '2015-05-17 18:05:07 -0500'
+date_gmt: '2015-05-17 23:05:07 -0500'
+---
+<p><strong>Update June 27, 2016: As some of this is out of date with Electron 1.0+ and new versions of VSCode, I decided to livestream a run through of this post with some updates. Check out the video here: <a href="https://www.youtube.com/watch?v=tY8dIdToJjQ">https://www.youtube.com/watch?v=tY8dIdToJjQ</a></strong></p>
+<p><a href="https://code.visualstudio.com/" target="_blank">Visual Studio Code</a> has quickly become one of my favorite editors. I use regular Visual Studio for a lot of my development, but at times I feel it is way too heavy for what I am doing. Visual Studio Code is a lot lighter, and much better for these occasions. If you haven't taken a look at it yet I highly recommend you do.</p>
+<p>VS Code is built on <a href="http://electron.atom.io/" target="_blank">Electron</a>, formerly Atom-shell, a cross-platform Chromium-based shell for building desktop apps with HTML, CSS, and JavaScript. It was created by the people over at GitHub for use with their Atom editor, and is now the foundation for a slew of cross-platform desktop applications.</p>
+<p>I thought it would be fun to give a little tutorial on how to get started with Electron development in Visual Studio Code. To do this tutorial you will need to install Visual Studio Code and Node.js. You can download VS Code here: <a href="https://code.visualstudio.com/" target="_blank">https://code.visualstudio.com/</a> and Node.js here: <a href="https://nodejs.org/" target="_blank">https://nodejs.org/</a>.</p>
+<h3>Setup</h3>
+<p>The first thing you should do is set up a folder for your new app. This is a pretty simple step. I would follow the following structure:</p>
+<pre>/my_app_name
+     /app</pre>
+<p>Next open up your command prompt and navigate to the folder you just created. Once you are there issue the following command:</p>
+<pre>npm install electron-prebuilt --save-dev</pre>
+<p>This will download a pre-built version of the Electron shell into your project folder. Your directory structure should now look something like this:</p>
+<pre>/my_app_name
+     /app
+     /node_modules
+          /.bin
+          /electron-prebuilt
+               /dist
+                    /electron.exe
+                    /...
+               /...</pre>
+<p>The path to Electron becomes important when we want to run our app.</p>
+<h3>Creating Your App</h3>
+<p>Open your /my_app_name folder in Visual Studio Code. The folder name should be visible in the Explore panel. Right-click on the /app folder and add a file named package.json. Copy the following code into it:</p>
+<pre>{
+ "name" : "my_app_name",
+ "version" : "0.1.0",
+ "main" : "main.js"
+}</pre>
+<p>You can name main.js whatever you want, but this seems to be the standard convention. When Electron loads your app it looks for the package.json file. It parses the contents and executes the JavaScript file assigned to the "main" property.</p>
+<p>Next, right-click on the /app folder again and add a main.js file. Copy the following code into it:</p>
+<pre>var app = require('app');
+var BrowserWindow = require('browser-window');
+
+var mainWindow = null;
+
+app.on('window-all-closed', function() {
+ if (process.platform != 'darwin')
+ app.quit();
+});
+
+app.on('ready', function() { 
+ mainWindow = new BrowserWindow({width: 800, height: 600}); 
+ mainWindow.loadUrl('file://' + __dirname + '/index.html'); 
+ mainWindow.on('closed', function() {
+ mainWindow = null;
+ }); 
+});</pre>
+<p>The loadUrl method can be modified to load from a file other than index.html. It will even load webpages if you want. I was able to load my blog into it :).</p>
+<p>Finally, right-click on the /app folder a third time and add a index.html file. Copy the following code into it:</p>
+<pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+ &lt;head&gt;
+ &lt;title&gt;Hello World!&lt;/title&gt;
+ &lt;/head&gt;
+ &lt;body&gt;
+ I learned about Electron in Visual Studio Code&lt;br /&gt;
+ from &lt;a href="http://www.mylifeforthecode.com"&gt;My Life For The Code&lt;/a&gt;.
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>From index.html you can create an html app as normal. Visit the Electron documentation to learn about the additional capabilities of the shell. Your VS Code instance should look something like this:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture1.png"><img class="alignnone size-large wp-image-235" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture1-1024x318.png" alt="vs code" width="625" height="194" /></a></p>
+<h3>Configure VS Code To Run Your App</h3>
+<p><strong>UPDATE: you can read through below if you like, but I find a better method for launching and debugging Electron in Visual Studio Code and wrote about it in <a href="http://www.mylifeforthecode.com/a-better-way-to-launch-electron-from-visual-studio-code/">A Better Way to Launch Electron From Visual Studio Code</a>.</strong></p>
+<p>Press Ctrl+Shift+B, you should get a message stating that there is no task runner configured with a Configure Task Runner button.</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture2.png"><img class="alignnone size-full wp-image-237" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture2.png" alt="configure task runner" width="460" height="52" /></a></p>
+<p>Click the Configure Task Runner button. This will create a .settings folder containing tasks.json and will open tasks.json in the editor. Comment out the default task runner that calls the TypeScript compiler, and add the following json:</p>
+<pre>{
+ "version": "0.1.0",
+ "command": "node_modules\electron-prebuilt\dist\electron.exe",
+ "args": ["app"]
+}</pre>
+<p>Now, save the file and press Ctrl+Shift+B again, and Electron should launch with your new app!</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture3.png"><img class="alignnone size-full wp-image-239" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture3.png" alt="Electron" width="800" height="600" /></a></p>
+<h3>Setting Up The Debugger</h3>
+<p><strong>UPDATE: you can read through below if you like, but I find a better method for launching and debugging Electron in Visual Studio Code and wrote about it in <a href="http://www.mylifeforthecode.com/a-better-way-to-launch-electron-from-visual-studio-code/">A Better Way to Launch Electron From Visual Studio Code</a>.</strong></p>
+<p>To set up the debugger, click on the debugger icon, followed by the settings/config icon (pointed to by the red arrow in the picture below).</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture4.png"><img class="alignnone size-full wp-image-250" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture4.png" alt="debugger" width="925" height="366" /></a></p>
+<p>This is open launch.json. Remove or comment out the launch app.js configuration as this does not work with Electron at this time.</p>
+<p>Next, open the .settings/tasks.json file that is used to run your app. Modify the "args" property to include "--debug=5858" like so:</p>
+<pre> "args": ["--debug=5858", "app"]</pre>
+<p>This will configure Electron to run with debugging enabled. You now have everything you need to debug your Electron app in VS Code. To test this, set a break point in your main.js to catch when the application closes like so:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture5.png"><img class="alignnone size-full wp-image-251" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture5.png" alt="break point" width="718" height="299" /></a>Now press F5 to launch the attach process and Ctrl+Shift+B to run your app. After it is launched the debugger should successfully attach to Electron and you have a debugger! Close your app to test the break point. You should get something like this:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture6.png"><img class="alignnone size-full wp-image-252" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture6.png" alt="break point hit" width="724" height="438" /></a>The credit on how to do the debugging goes to the author of this blog post: <a href="http://floatincode.net/post/debugging-electron-application-with-visual-studio-code">http://floatincode.net/post/debugging-electron-application-with-visual-studio-code</a>. I just adapted his tutorial to this one.</p>
+<h3>In Closing</h3>
+<p>This should be enough to get you started. I am starting work on a small project that I am currently planning to host in Electron and develop in VS Code. As I learn more about these tools I'll make sure to share anything I think might help someone else trying to do similar work. So check back sometime in the future! :-)</p>

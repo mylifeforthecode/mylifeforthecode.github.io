@@ -1,0 +1,52 @@
+---
+layout: post
+status: publish
+published: true
+title: Finding Gems in Old Computing
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 220
+wordpress_url: http://www.mylifeforthecode.com/?p=220
+date: '2015-05-16 16:17:45 -0500'
+date_gmt: '2015-05-16 21:17:45 -0500'
+---
+<p>I’ve been lucky enough in my career to develop software that runs on OpenVMS, an operating system many people my age and younger have never heard of. It is a relic from the 70’s, 80’s, and 90’s which was well ahead of its time, but has since faded out of relevance as Linux has come to dominate the server market. The operating system was created by a company called Digital Equipment Corporation, a dominant player in the computing market until the mid 90’s when the business faltered and they were acquired by Compaq. In turn Compaq was acquired by HP who now owns the software. HP announced in 2013 that they would end support for the OS in 2020, but have since licensed support to a company of die-hard OpenVMS veterans called <a href="http://vmssoftware.com/">VSI</a> (VMS Software Inc).</p>
+<p>The rise and fall of DEC is an interesting tale, but one that is not the primary focus of this post. What I would like to discuss are a few gems that I have found in using the system. I am sure the extreme OpenVMS fan-boys could rattle on about the numerous merits of the OS (clustering support being one of them), but I just want to focus on the few simple small things that I have found unique and good in my experiences with the OS. That is not to say things do not exist elsewhere, but I have yet to see them elsewhere.</p>
+<h2>File Versioning</h2>
+<p>The first thing that I have come to like about OpenVMS is its built-in file versioning. If I open, modify, and save a file a new version is created instead of overwriting the old one. This may be a waste of space, but I found it more useful than not. For example, I've gone down the wrong path writing code on numerous occasions, and in Windows or Linux I've just had to hope the undo in my editor has a long enough history to get me back to where I started or that I was aggressive at committing incremental change sets to version control. With OpenVMS every save is a new version, and If I wanted to “rollback” to older state I just needed to open up an older version of the file, modify it, and save it again. Also, when logging things to a file I didn't need to worry about creating a unique name for the file based on time because it would create a unique name for me. This is implemented by adding a semi-colon ‘;’ followed by the version number to the file name. For example, the full file name of a file called “log.txt” would actually be “log.txt;<em>n</em>” where <em>n</em><em> </em>is the version of the file. Opening log.txt would always get the latest version. I remember being ecstatic one day to learn that I could do log.txt;-1 to open the previous version. When I developed directly in the OS using an editor called LSE there were times where I had hundreds of copies of a single module sitting around. Thankfully there is a command called “purge” that deletes all the old versions.</p>
+<h2>Case Sensitive Replacement in LSE</h2>
+<p>Speaking of LSE, there is one feature this editor has that I wish I could find in a modern text editor. LSE stands for <em>Language-Sensitive Editor</em>, and it is a relatively powerful editor unique to OpenVMS. I used it heavily to develop software for a few years, but have since moved to a modern IDE. While moving on to a modern IDE has certainly increased my productivity, there is one feature I wish I didn't have to give up. LSE has a <em>SUBSTITUTE</em> command that is much like the replace functionality in most editors. This command, however, has a golden qualifier called <em>/CASE_MATCHING</em>. With this qualifier the <em>SUBSTITUTE</em> command will analyze the text to be replaced to determine the case of the replacement string. For example, if I have a type in all upper case called VECTOR and then a variable in all lower case named vector and I want to change them both to VECTOR2 and vector2, respectively, I would have to initiate 2 separate series of replace sequences in most modern editors, but with LSE I can <em>SUB/CASE VECTOR VECTOR2</em> and the upper case VECTOR would become VECTOR2 and the lower case vector would become vector2 in the same sequence. This is was an incredibly nice feature I haven’t been able to locate in an editor since. If you know of an editor that does this please let me know.</p>
+<h2>Substitution in DCL</h2>
+<p>The shell language of OpenVMS is called DCL. DCL stands for <em>Digital Command Language</em>. It is a primitive and confusing language devoid of some of the most basic modern programming constructs like loops and arrays. I've written a number of complex DCL scripts (or COM files as we refer to them due to their .COM extension), and I would gladly go forward in life never writing another one. Perhaps the most annoying part of generating these scripts is that every line begins with the dollar sign ($) character. The dollar sign ($) character is used prolifically in OpenVMS, and I wonder if this reflects what was on the minds of their engineers who built it? Anyways, despite its many shortcomings, DCL has a powerful language feature called <em>substitution</em> that is not common to other languages.</p>
+<p>Substitution can be thought of as a sort of pre-processor. When the interpreter reads in a line of DCL code, the code is scanned for substitutions before being interpreted. There are a few varieties of substitution supported by DCL, but I’ll focus on apostrophe substitution. When the scanner finds the apostrophe (‘) character it reads the symbol immediate proceeding it and then performs a textual replacement of its content with its value. For example, if the value of x is set to the number 0 then the DCL command <em>$ vec’x = 42</em> would be interpreted as <em>$ vec0 = 42</em> by the DCL interpreter<em>.</em></p>
+<p>This is a very powerful feature in the language, making things like arrays that not supported by DCL possible. Here is a contrived example of what this looks like…</p>
+<pre><span style="font-family: Consolas;">$! imagine “names” is the array, we have unique symbols for each entry…
+$! this is a comment btw...
+$ names0 = “Paul Anagnostopoulos”
+$ names1 = “Steve Hoffman”
+$ names2 = “Shawn Rakowski”
+$! now we can iterate through the array using substitution
+$ i = 0
+$ print_names_loop: 
+$     name = names’i ! note that 'i is replaced by the number it represents
+$     if "''name'" .eqs. “Shawn Rakowski”
+$     then
+$          write sys$output “Hey ''name' isn't a DCL expert!”
+$     endif
+$     i = i + 1
+$     if i .lt. 3 then goto print_names_loop
+$ exit </span></pre>
+<p>I don’t have a DCL interpreter around to check the above code so hopefully it works, but even if it is incorrect you should be able to get the gist of it and also understand why DCL is otherwise a less-than-phenomenal programming language. Note that within string literals the double apostrophe is needed to invoke substitution.</p>
+<h4>The Case Insensitivity of DCL</h4>
+<p>By default, DCL commands are not case-sensitive. I think it is possible to make it case sensitivity through a setting, but I like it this way. I never appreciated how nice it was until recently when I started using an Linux terminal again and found myself getting upset having to employ the shift key all the time. This is a minor thing, but I wish it was possible to make things case insensitive elsewhere.</p>
+<h2>In Closing</h2>
+<p>There are probably a few other things I could add here, but these are the things that stand out the most in my mind at this time. I have met a lot of people who cringe at the thought of working with antiquated platforms, using old programming languages, or developing on or in anything that is not the latest and greatest. However, I think every developer should at some point in their life seek out work that requires development on obscure or out-of-date technologies. Not only will it make you appreciate how good you have it today, you may find a few gems of your own that make you wish you had a little bit of the old computing in your modern world.</p>
+<p>Also, if anyone happens to find this who is looking for a book on DCL, find a copy of <em>Writing Real Programs in DCL </em>by Paul Anagnostopoulos (who has an incredible last name) and Steve Hoffman. This book really helped me wrap my head around the madness that is DCL.<br />
+Image Credit, Image Derived From:<br />
+Amethyst Macro by <a href="https://www.flickr.com/photos/68397968@N07/" target="_blank">MattysFlicks</a><br />
+and Terminal by <a href="https://www.flickr.com/photos/nseika/" target="_blank">nseika</a></p>

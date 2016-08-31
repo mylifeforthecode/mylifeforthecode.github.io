@@ -1,0 +1,43 @@
+---
+layout: post
+status: publish
+published: true
+title: Using Electron-Packager To Package an Electron App
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 586
+wordpress_url: http://www.mylifeforthecode.com/?p=586
+date: '2015-07-17 19:36:00 -0500'
+date_gmt: '2015-07-18 00:36:00 -0500'
+---
+<p>I wrote an article a month or two ago called <a href="http://www.mylifeforthecode.com/creating-a-windows-distribution-of-an-electron-app-using-squirrel/">Creating a Windows Distribution of an Electron App using Squirrel</a>. In it I manually gathered the pieces I needed to create the package to be distributed and hack the executable's resources by hand. This was cumbersome and I recently learned there is a pretty cool project called <a href="https://github.com/maxogden/electron-packager">electron-packager</a> that will do a lot of this for you. I took it for a spin tonight.</p>
+<h4>Get Electron-Packager</h4>
+<p>With the beauty of most things that are Node, electron-packager is available via npm. Here is the command to get it:</p>
+<pre><code>npm i electron-packager -g
+</code></pre>
+<p>Of course, this can also be saved to the development work space if needed.</p>
+<h4>Use Electron-Packager</h4>
+<p>In <a href="http://www.mylifeforthecode.com/creating-a-windows-distribution-of-an-electron-app-using-squirrel/">Creating a Windows Distribution of an Electron App using Squirrel</a> I have you create a 'Staging' to load everything into. Without worrying about resources hacking or copying and pasting here is the command I would to have electron-packager do the heavy lifting:</p>
+<pre>electron-packager &lt;dir&gt; &lt;app_name&gt; --platform=win32 --arch=all --version=&lt;electron_version&gt; --icon=&lt;path_to_icon&gt; --out=Staging --version-string.CompanyName=&lt;my_company_name&gt;--version-string.ProductName=&lt;my_product_name&gt; --version-string.ProductVersion=&lt;product_version&gt;</pre>
+<p>Here is a bit of a break down:</p>
+<ul>
+<li><strong><em>&lt;dir&gt;</em></strong> replace this with the path to your app folder.</li>
+<li><em><strong>&lt;app_name&gt;</strong> </em>this is the name of your app.</li>
+<li><strong>--platform=win32</strong> you can build for all platforms, but I only run Windows at the moment so that is all I built for. This is required.</li>
+<li><strong>--arch=all</strong> you can choose to build for 32 bit or 64 bit or both. I just went with all.</li>
+<li><strong>--version=</strong><em><strong>&lt;electron_version&gt;</strong> </em>replace with the version of Electron you want to use.</li>
+<li><strong>--icon=</strong><em><strong>&lt;path_to_icon&gt;</strong> </em>provide the path to the .ico file you want to use, placed in the .exe's resources.</li>
+<li><strong>--out=Staging</strong> where you want the output to go, i chose staging.</li>
+<li><strong>--version-string.CompanyName=<em>&lt;my_company_name&gt; </em></strong>puts your company name in the Version Info resources of the executable.</li>
+<li><strong>--version-string.ProductName=<em>&lt;my_product_name&gt; </em></strong>puts the name of the product into the Version Info resources of the executable.</li>
+<li><strong>--version-string.ProductVersion=<em>&lt;product_version&gt; </em></strong>puts your product version in the Version Info resources of the executable.</li>
+</ul>
+<p>When you are done running the command folders of form -- are created. If you are creating a package for Squirrel.Windows you'll want to make sure you update the .nuspec file to point to the new directories created by electron-packager.</p>
+<p>Sorry I did not go in-depth on this. The documentation for electron-packager is pretty self-explanatory. Check out the full documentation for electron-packager here: <a href="https://github.com/maxogden/electron-packager">https://github.com/maxogden/electron-packager</a></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>

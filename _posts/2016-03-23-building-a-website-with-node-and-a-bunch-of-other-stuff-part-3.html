@@ -1,0 +1,97 @@
+---
+layout: post
+status: publish
+published: true
+title: Building a Website with Node and a Bunch of Other Stuff, Part 3
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 1585
+wordpress_url: http://www.mylifeforthecode.com/?p=1585
+date: '2016-03-23 23:20:26 -0500'
+date_gmt: '2016-03-24 04:20:26 -0500'
+---
+<p>As the title indicates this is part 3 in a series where I prove to you how little I actually know about developing applications in Node.js with a bunch of other stuff. If you would like to review the train wreck that has been this series please check out <a href="http://www.mylifeforthecode.com/building-a-website-with-node-and-a-bunch-of-other-stuff-part-1/">Building a Website with Node and a Bunch of Other Stuff, Part 1</a> and <a href="http://www.mylifeforthecode.com/building-a-website-with-node-and-a-bunch-of-other-stuff-part-2/">Building a Website with Node and a Bunch of Other Stuff, Part 2</a>.</p>
+<p>If, for some reason, you'd like to start with part 3, maybe the numbers 1 and 2 make you nervous, then here is the extremely quick start guide:<!--more--></p>
+<p>We're building an application with Node, Express, MongoDB, and Visual Studio Code. I have called it "Steaming". Steaming will be a blogging platform that prohibits editing (even backspace). To get caught up to this point do the following:</p>
+<ol>
+<li>Install Node.js, MongoDB, and Visual Studio Code</li>
+<li>Run MongoDB, i.e. mongod.exe</li>
+<li>Clone the Part 2 repo, i.e. git clone https://github.com/srakowski/steaming-pt2</li>
+<li>Change directories to the cloned repo, i.e. cd steaming-pt2</li>
+<li>Install dependencies, i.e. npm install</li>
+<li>Open folder in Visual Studio Code</li>
+<li>Press F5 in VSCode to run it</li>
+<li>Navigate to <a href="http://localhost:3000">http://localhost:3000</a></li>
+</ol>
+<p>Presto! You now have everything you need to work on this part of the train wreck. I am not sure why I didn't just skip to Part 3 to begin with... it would have saved a lot of typing.</p>
+<p>In this installment I am going to add user accounts to Steaming using Passportjs. This should be fun...</p>
+<h1>The Mongoose Passport</h1>
+<p>When I started looking into building an application with Node and Express one of the first things I looked into was setting up user accounts. Most applications use some form of user accounts, and unlike my experiences with starting an ASP.NET project I wasn't provided this right out of  the box. Searching around the internet for user authentication I found that <a href="http://passportjs.org/">Passport</a> is one of the best.</p>
+<p>Passport boasts an impressive array of authentication strategies for just about everything (not Microsoft for some reason). I want to keep things simple so I settled on the local, roll-your-own strategy as I am a glutton for punishment and I don't feel like walking you through setting something up with Twitter or Facebook.</p>
+<p>We're using MongoDB and Mongoose for our persistence. As luck would have it someone already created a <a href="https://github.com/saintedlama/passport-local-mongoose">nice library</a> to implement the Passport local strategy with Mongoose. That being said, let's get some NPM'ing out of the way...</p>
+<pre>npm install passport --save
+npm install passport-local --save
+npm install passport-local-mongoose --save
+npm install express-session --save</pre>
+<p>"passport" is the core package, "passport-local" is the strategy for local authentication, "passport-local-mongoose" is an implementation of the local authentication strategy using Mongoose. We also need the "express-session" path because... sessions.</p>
+<p>Now to wire things up...</p>
+<h2>The User Model</h2>
+<p>In Part 2 we created a model for a Steamer using Mongoose. We'll need to create something similar for our User. The passport-local-mongoose package provides a simple plugin to set up the default fields for a user (i.e username and password). In your models folder create a file called user.js and fill it with this:</p>
+<p>https://gist.github.com/srakowski/cc394d14e7c8a29ed254</p>
+<p>That's all you really need to configure a user account. You may, of course, modify the schema I left empty with all sorts of information about your User, including pie preference and thoughts on tater tots (I've been fasting for over 24 hours at this point and my mind is drifting to food). I don't think we're going to care too much about those kinds of things with Steaming so for now we'll just leave the thing empty.</p>
+<h2>Configuring passport-local-mongoose</h2>
+<p>Head over to your app.js file. We'll need to add some code to this to wire up the Passport local strategy with Mongoose and to get the sessions working. Add the following code to your app.js file:</p>
+<p>https://gist.github.com/srakowski/a3eeb392fa61fc3de11f</p>
+<p>Apparently, <strong>the order of this stuff matters</strong>, especially the app.use section. If you are having trouble getting things to work keep an eye on the ordering. Otherwise, that's all we really need to do! The library takes care of the nitty-gritty for you. I would, however, take a look at a few well written tutorials (obviously not by the author of this one) on what exactly is going on with the User.createStrategy(), User.serializeUser(), and User.deserializeUser().</p>
+<p>Try running things at this point and verify the website still works. It may save you from headaches down the road.</p>
+<h1>The 3 Signs</h1>
+<p>The 3 signs that the world is coming to an end are the following: 1. someone invents a healthy doughnut that tastes like a regular doughnut, 2. the last remnants of a JavaScript engine is removed from Chrome and Edge (I don't think FireFox is going to be around to see that day), and 3. a variation of Segway Polo is invented where players are equipped with VR devices that make it look like they are playing a game of traditional Polo on horses.</p>
+<p>Now that I got that out of the way, the 3 signs I am actually talking about are Signup, Signin, and Signout. You may like The 3 Logs better, but the content of this post would have clearly fallen into potty humor, well, worse than it already has with the Steaming reference. To save you that, we'll stick with the 3 signs.</p>
+<h2>Sign...</h2>
+<p>To keep things segregated from the rest of the application, signing up/in/out will be part of a separate set of routes. Before continuing, create a file called sign.js and scaffold it with the following code:</p>
+<p>https://gist.github.com/srakowski/0cc50dffc5ab1f315ca0</p>
+<p>Then modify app.js to wire the Express router for sign related activity into the app by adding the following:</p>
+<p>https://gist.github.com/srakowski/5a34eb6d6f4cf2c69825</p>
+<p>You should now be all set to continue with your regularly scheduled tutorial...</p>
+<h2>Sign Up</h2>
+<p>If you want to create a steamer in Steaming you'll need to register first. For this, we're going to add a very basic sign up page where a user enters a desired username and password. That's it, no frills, just the basics. To kick this off we're going to need a Jade view for our sign up page. Add signup.jade to your views folder and make it look something like this:</p>
+<p>https://gist.github.com/srakowski/7a75dacf7f7eda100a4d</p>
+<p>Now that you have a well designed form, optimized for user experience, you're going to need to add some routes to the sign.js file we created earlier. We need a get route to actually render the form and a post route to actually do the work. Add the following to sign.js:</p>
+<p>https://gist.github.com/srakowski/68eafcaf60e64a046cdf</p>
+<p>You should now be able to navigate to http://localhost:3000/sign/up, see a lovely form, and sign up for Steaming. Note that passport.authenticate needs to be called after User.register if you actually want the user to be signed in after they create their account.</p>
+<h2>Sign In</h2>
+<p>Now that a user has signed up they will obviously want to use the service more than once (who wouldn't), and so we probably should give them a way to sign in. The form is almost the exact same as the sign up form. In your views folder create signin.jade and copy the following into it:</p>
+<p>https://gist.github.com/srakowski/c0bb0b3c86f0c3e78c10</p>
+<p>We'll need the proper routes to handle the form retrieval and authentication process as well.</p>
+<p>https://gist.github.com/srakowski/f317aae5068f8f08b00d</p>
+<p>Note that we check req.isAuthenticated() so that we don't go to the sign in page when someone is already signed in. That is how you check this kind of thing.</p>
+<h3>Sign Out</h3>
+<p>Now for the hard part. Add this to sign.js</p>
+<p>https://gist.github.com/srakowski/aff4571a4ab360d61f3d</p>
+<p>Presto! You should now have all the routes and forms you need! You should be able to pound F5 and register silly named accounts all day long.</p>
+<p>Why were we doing this again? Oh, right...</p>
+<h1>Checking Authentication</h1>
+<p>We only want authenticated users to be allowed to create steamers. This means we need to modify a few things. First, we'll want to check requests to the /create routes to ensure the request is authenticated. That should be pretty easy by modifying index.js and adding this check in the route callback:</p>
+<p>https://gist.github.com/srakowski/8ef189f719d22b655301</p>
+<p>There is a cleaner way to do this using middleware functions, but I'll save that for the next installment.</p>
+<p>When we arrive at the index and view our steamers we need links that will allow us to either sign in or sign up. If we are authenticated then we'll either want to create a steamer or sign out. To do this we'll want our Jade views to know whether or not the user is signed in. A simple way to do this is to intercept all incoming requests and provide a variable that indicates this to the response. I happen to have something just like that here:</p>
+<p>https://gist.github.com/srakowski/9c5c9d8065e7d5602616</p>
+<p>Finally, we need to add some switching to our index.html file. Modify the file to look like this:</p>
+<p>https://gist.github.com/srakowski/0cf62cbe9a31a800d514</p>
+<h1>Tying Users to Steamers</h1>
+<p>The final step in this process is tie users to the steamers they create. Previously we allowed users to simply enter their name as the Author. Instead, we'll take the shortcut and mostly backwards compatible step of auto-populating the User's username in the author field. To do this:</p>
+<ol>
+<li>Remove the Author input from create.jade</li>
+<li>In the post /create route in index.js replace "req.body.author" with "req.user.username"</li>
+<li>Done</li>
+</ol>
+<p>You shouldn't really need to do anything else to get this to work. The username will now auto populate as the author and display in place without breaking any existing steamers. If you go up a few Gists to where I demonstrated adding isAuthenticated to calls this change is present.</p>
+<h1>Success?</h1>
+<p>If you followed along you should now have a fully functioning, albeit a completely fragile, steaming pile of crap, blogging platform. There are just a few things we'll want to adjust and our Steaming site will be complete. I'll save that for Part 4.</p>
+<p>In case I accidentally hosed something up, the code for this is available on GitHub here: <a href="https://github.com/srakowski/steaming-pt3">https://github.com/srakowski/steaming-pt3</a></p>
+<p>Thanks for reading!</p>

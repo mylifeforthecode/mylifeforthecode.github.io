@@ -1,0 +1,32 @@
+---
+layout: post
+status: publish
+published: true
+title: Yield, The Little Keyword I Never Knew
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 1553
+wordpress_url: http://www.mylifeforthecode.com/?p=1553
+date: '2016-03-12 11:04:55 -0600'
+date_gmt: '2016-03-12 17:04:55 -0600'
+---
+<p>7 years.</p>
+<p>That's about how far I made it in my software development career before I first encountered the <em>yield</em> keyword. It's true that I have spent a considerable amount of my time writing C code, and C doesn't have it, but even in my C# experiences I hadn't crossed this wonderful little keyword until just recently. While I am a little ashamed admitting this, I would guess that there are a fair number of developers that have either never encountered this keyword before or have never invested the time to understand its most basic usage. If that is true of you then this post may be of some use.</p>
+<p>My complete ignorance of the yield keyword ended recently when I started using Python heavily in my day job. My understanding is quite novice, but I am happy to have another tool in my belt.</p>
+<p>Yield is like a return statement. When a return statement is invoked in a subroutine the subroutine exits and the state is forgotten. Every invocation is a unique instance. The yield keyword creates something called a <strong>coroutine</strong>. When a yield statement is invoked, the coroutine suspends execution, returns the yielded value, and the state of execution is maintained for future invocations.</p>
+<p>If you are completely new to this it may be hard to visualize without a code example. That being said, imagine you want to write a routine that will give you the value of <em>x</em> to the power of <em>i</em> for every value between 0 and <em>n</em>. You would probably write something like this:</p>
+<p>https://gist.github.com/srakowski/9d41361c44fef4f90c61</p>
+<p>There is nothing wrong with doing it this way except that the powers function consumes memory as it builds up the list of values. In this trivial example that is no problem, but what if memory consumption is concern in a non-trivial example? The same thing can be accomplished using the yield keyword. Here is an example:</p>
+<p>https://gist.github.com/srakowski/7940ab3bda2e51b354e7</p>
+<p>In this version, the powers function is invoked, the for loop begins with the first value of i (0), x (2) to the 0th power (1) is computed, and then the yield keyword is processed. At this point the execution of the powers function is suspended and a special iterable called a <strong>generator</strong> is returned for use in the for-each loop that prints the value. When the for-each loops and requests the next value from the generator, the powers function resumes execution at the point of the yield keyword, i is incremented, the next power of x is computed, and the this value is returned once again suspending the execution of the powers function. This repeats until i reaches the value of n and the code block ends. At this point the generator indicates that the end has been reached and the for-each ends.</p>
+<p>In the second example, the memory footprint remains small as every power is processed as it is generated. While this example is trivial, the power of this feature should be apparent.</p>
+<p>When the powers function is invoked the calling routine receives what looks like a standard iterable. This fact is hidden away because of the dynamic nature of Python. Implementing the same thing in C# paints a clearer picture:</p>
+<p>https://gist.github.com/srakowski/8817516afe963aa9c71b</p>
+<p>"yield return" produces the well understood IEnumerable for iteration.</p>
+<p>I mentioned both coroutines and generators. A generator is a generalization of a coroutine. The distinction is subtle and I would probably not do well to explain it. I'd suggest taking a look at <a href="https://en.wikipedia.org/wiki/Coroutine">Wikipedia's article on coroutines</a>. It does a pretty decent job of explaining the difference between couroutines, subroutines, and generators (in a very academic sort of way). Alternatively, <a href="http://www.dabeaz.com/coroutines/">A Curious Cource on Coroutines and Concurrency</a> by David Beazley gives a pretty good overview of these constructs. The goal of the post is a simple introduction yield, and so I'll leave further exploration to you.</p>
+<p>Well, congratulations! If you had never heard of the yield keyword, generators, or coroutines before you have now leveled up to at least the <a href="http://c2.com/cgi/wiki?OrdersOfIgnorance">1st Order of Ignorance</a> on the subject.</p>

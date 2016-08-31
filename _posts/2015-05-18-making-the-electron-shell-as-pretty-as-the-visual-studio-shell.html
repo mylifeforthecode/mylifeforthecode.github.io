@@ -1,0 +1,160 @@
+---
+layout: post
+status: publish
+published: true
+title: Making the Electron Shell as Pretty as the Visual Studio Shell
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 254
+wordpress_url: http://www.mylifeforthecode.com/?p=254
+date: '2015-05-18 21:46:08 -0500'
+date_gmt: '2015-05-19 02:46:08 -0500'
+---
+<p><strong>*** Updated 4-JUN-2016 to reflect Electron v1.0 changes ***</strong></p>
+<p>One thing I love about Visual Studio that I hate about Visual Studio Code is the window chrome. You know, that dated looking border around your windows where you control sizing, position, and all that jazz. To demonstrate, here is a side by side comparison of the window chrome on Visual Studio vs Visual Studio Code:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/chrome.png"><img class="alignnone size-large wp-image-256" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/chrome-1024x435.png" alt="window chrome comparison" width="625" height="266" /></a></p>
+<p>Atom editor is the same way. I wondered if this was a limitation of Electron, but looking into it I found that Electron can go chrome-less and it is pretty easy thing to do. I'll show you in this post how to turn an ugly Electon window into a pretty one like Visual Studio. <strong>NOTE:</strong> I will not be testing this on Mac or Linux. If someone would share their results I would appreciate it.</p>
+<p>To get started with Electron, check out my previous post <a href="http://www.mylifeforthecode.com/getting-started-with-electron-in-visual-studio-code/" target="_blank">Getting Started With Electron in Visual Studio Code</a>. We'll start with what we ended with there.</p>
+<h3>Removing the Frame</h3>
+<p>The first step to doing this is pretty simple. We need to remove the frame from the browser window. To do that open the main.js file (or whatever you called it) that creates the browser window. Modify this line <code>mainWindow = new BrowserWindow({width: 800, height: 600});</code> and add the property frame: false to it like so:</p>
+<pre>mainWindow = new BrowserWindow({width: 800, height: 600, <span style="color: #ff00ff;"><b>frame: false</b></span>});</pre>
+<p>Now if you run your app you'll see that the chrome around your Electron shell has been removed. Also note that you can still re-size the window as normal you just can't move/close/min/max it as you normally can:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/chromeless.png"><img class="alignnone size-full wp-image-259" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/chromeless.png" alt="chromeless" width="704" height="476" /><br />
+</a></p>
+<h3>Adding Move, Min, Max, and Close</h3>
+<p>To do this we'll start by adding some stuff to the index.html file. Open it up and add the following:</p>
+<pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+     &lt;title&gt;Chromeless&lt;/title&gt;
+     <span style="color: #ff00ff;">&lt;link rel="stylesheet" href="default.css" /&gt;</span>
+&lt;/head&gt;
+&lt;body&gt;
+<span style="color: #ff00ff;"><strong>     &lt;div id="title-bar"&gt;</strong>
+<strong>          &lt;div id="title"&gt;My Life For The Code&lt;/div&gt;</strong>
+<strong>          &lt;div id="title-bar-btns"&gt;</strong>
+<strong>               &lt;button id="min-btn"&gt;-&lt;/button&gt;</strong>
+<strong>               &lt;button id="max-btn"&gt;+&lt;/button&gt;</strong>
+<strong>               &lt;button id="close-btn"&gt;x&lt;/button&gt;</strong>
+<strong>          &lt;/div&gt;</strong>
+<strong>     &lt;/div&gt;</strong>
+<strong>     &lt;div id="content"&gt;</strong></span>
+          I learned about Electron in Visual Studio Code&lt;br /&gt;
+          from &lt;a href="http://www.mylifeforthecode.com"&gt;My Life For The Code&lt;/a&gt;.
+<span style="color: #ff00ff;"><strong>     &lt;/div&gt;
+    &lt;script src="default.js"&gt;&lt;/script&gt;</strong></span>
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+<p>I didn't want to worry too much about the icons for min/max/close so i improvised :). Running this will do you no good as we need to add some CSS and JavaScript. Add a default.css file to the same folder as index.html. Open it up and add the following:</p>
+<pre>body {
+ padding: 0px;
+ margin: 0px; 
+}
+
+#title-bar {
+ -webkit-app-region: drag;
+ height: 24px; 
+ background-color: darkviolet;
+ padding: none;
+ margin: 0px; 
+}
+
+#title {
+ position: fixed;
+ top: 0px;
+ left: 6px; 
+}
+
+#title-bar-btns {
+ -webkit-app-region: no-drag;
+ position: fixed;
+ top: 0px;
+ right: 6px;
+}</pre>
+<p>A couple of key things here have to do with the -webkit-app-region. This extension allows you to define an area of the window that will make it draggable. We make the title bar draggable, but turn it off on the buttons (otherwise they will invoke dragging instead of clicking). Now we have something like this:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/progress.png"><img class="alignnone size-full wp-image-265" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/progress.png" alt="progress" width="567" height="431" /></a></p>
+<p>Note that the purple area in the header is a region that allows you to drag the window around. One thing this does, however, is make the window *not* easily re-sizable from the top. I'll probably work out a fix for this later.</p>
+<p>Next we need to make the min/max/close buttons actually do something. For that we'll add a little JavaScript. Create a default.js file and add the following to it:</p>
+<p>https://gist.github.com/srakowski/c7f3cb3c12c28d751993f6c7b030bcd9</p>
+<p>Of course there are probably nicer ways to do this, but this works :). If you run your app you should now be able to minimize, maximize, and close your app. However, there is something in this code snipped that may look a little weird, what is this "remote" thing?</p>
+<h3>The Main and Renderer Processes</h3>
+<p>When you start up an Electron app a process is started called <strong>the main process</strong>. This starts up and runs until you call quit(). From this process you can start other processes called <strong>renderer processes</strong>. If you use Chrome as a web browser you probably have noticed that Chrome runs each tab in a separate process. If one process dies it does not kill the rest of Chrome. Electron is built on Chromium and works the same way. You can spawn a number of different browser windows that run in separate renderer processes apart from the main process that launches each of them.</p>
+<p>That being said, when you declare mainWindow in the main.js process this isn't accessible to the separate renderer processes you create. <strong>Remote</strong> gives you the ability to communicate between a renderer process and the main process. In this example, I use remote to gain access to the BrowserWindow class available the main process. From it I can gain access to the window that has focus and perform the commands dictated by the buttons. I think this is pretty neat stuff!</p>
+<h3>Make It Pretty</h3>
+<p>If you look back to the window we created earlier it is pretty darned ugly. Let's make it look a little more like Visual Studio by adding some additional CSS. This is not really necessary but I want to show how we can get to a nice looking app just like VS. Open up default.css and replace the contents with this:</p>
+<pre>html {
+ margin: 0px;
+ padding: 0px;
+}
+
+body {
+ padding: 0px;
+ margin: 0px;
+ background-color: #2D2D30;
+ border: 1px solid #68217A;
+ border-bottom: 24px solid #68217A;
+ position: absolute;
+ top: 0px;
+ left: 0px;
+ right: 0px;
+ bottom: 0px;
+}
+
+#title-bar {
+ -webkit-app-region: drag;
+ height: 32px; 
+ padding: 0px;
+ margin: 0px; 
+ color: #ADADAD;
+ font-family: sans-serif;
+}
+
+#title {
+ position: fixed;
+ top: 0px;
+ left: 12px; 
+ line-height: 32px;
+ font-size: 14px;
+}
+
+#title-bar-btns {
+ -webkit-app-region: no-drag;
+ position: fixed;
+ top: 1px;
+ right: 0px; 
+}
+
+#title-bar-btns button {
+ height: 32px;
+ width: 32px;
+ background-color: transparent;
+ border: none;
+ color: #F1F1F1;
+ font-size: 16px;
+}
+
+#title-bar-btns button:hover {
+ background-color: #3F3F41;
+}
+
+#content {
+ padding: 12px; 
+ color: #CCCCCC;
+}
+
+a {
+  color: #68217A;
+}</pre>
+<p>Now you should get a nice pretty window here is the side-by-side with Visual Studio...</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/sidebyside.png"><img class="alignnone size-full wp-image-272" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/sidebyside.png" alt="sidebyside" width="841" height="392" /><br />
+</a></p>
+<p>Pretty darn snazzy if I don't say so myself! Now you have a shell as pretty as Visual Studio :).</p>
+<h3>In Closing</h3>
+<p>The more I learn about Electron the more I love it. It was a snap to learn how to make a beautiful looking window. The same thing in WPF is cumbersome without a framework IMHO. I am excited to continue learning about this.</p>
+<p>I put the source code for this out on GitHub at: <a href="https://github.com/srakowski/ElectronLikeVS">https://github.com/srakowski/ElectronLikeVS</a></p>
+<p>&nbsp;</p>

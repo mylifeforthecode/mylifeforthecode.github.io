@@ -1,0 +1,61 @@
+---
+layout: post
+status: publish
+published: true
+title: Electron, Edge, .NET? ERMAHGERD!
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 284
+wordpress_url: http://www.mylifeforthecode.com/?p=284
+date: '2015-05-19 23:37:59 -0500'
+date_gmt: '2015-05-20 04:37:59 -0500'
+---
+<p>So there is a pretty sweet project that connects up node.js with .NET called <a href="http://tjanczuk.github.io/edge/#/" target="_blank">Edge.js</a>. I thought it would be pretty sweet if I could use .NET libraries from within Electron to create awesome applications with access to all the .NET and JS libraries I can get my hands on.</p>
+<p>A few years ago I wrote an ERMAHGERD translator for the Windows Store. It was my first WinRT app and was pretty fun to build. I made the source code available freely on Codeplex. At the time GitHub was not as huge as it is today. You can still get that code on Codeplex <a href="http://ermahgerd.codeplex.com/" target="_blank">here</a>. I thought it might be a pretty good proof of concept to get an simple ERMAHGERD translator working in Electron using my old C#.NET lib.</p>
+<p>I am going to build this app of my previous couple of posts about Electron, <a href="http://www.mylifeforthecode.com/getting-started-with-electron-in-visual-studio-code/">Getting Started With Electron in Visual Studio Code</a> and <a href="http://www.mylifeforthecode.com/making-the-electron-shell-as-pretty-as-the-visual-studio-shell/">Making the Electron Shell as Pretty as the Visual Studio Shell</a>. However, you should be able to apply what I do here to your project.</p>
+<h3>Get Electron-Edge</h3>
+<p>To start, I tried a few of the hello world snippets with Edge.js in straight Node.js and things seemed to work pretty well. However npm install edge into my Electron app didn't fair so well. Apparently Electron uses a non-standard version of Node and the hello worlds barf. After looking around aimlessly at how to fix it I came across a nice little node package called electron-edge. As you can guess, this is just what I needed. To get started, in your project folder for your Electron app you need to run:</p>
+<pre>npm install electron-edge</pre>
+<p>You may get a funky error stating you need to custom build edge, but this doesn't seem to cause much problems at run time.</p>
+<h3>Get And Modify The ERMAHGERD Translator</h3>
+<p>Next thing you'll need is my ERMAHGERD translator. As referenced before you can download and build the source code here: <a href="http://ermahgerd.codeplex.com/">http://ermahgerd.codeplex.com/</a>. You will need Visual Studio to build it. Mono may work, but I haven't tried it.</p>
+<p>You are going to need to make a slight addition to the existing Translate.cs file. You'll need to add this function to the Translate class:</p>
+<pre> public Task&lt;object&gt; ToErMahGerd(object text)
+ {
+      return Task.Factory.StartNew(() =&gt; ToErMahGerd(text as string) as object);
+ }</pre>
+<p>In order to access a method from Edge.js the method signature must accept an object and return Task&lt;object&gt;. If this doesn't match things get messy. My existing ERMAHGERD translator didn't have it, but it's an easy fix.</p>
+<p>When you build this project you should get an ERMAHGERD.dll file. Copy the ERMAHGERD.dll file into the same folder as your Electron project folder, i.e. the root folder containing your app folder. It is supposed to be possible to point Edge.js directly at your source code, but for this tutorial I am assuming pre-built assemblies.</p>
+<h3>Putting It Together</h3>
+<p>Now that I have Edge and the ERMAHGERD.dll added, I need to make as simple UI to do the translation. This is pretty simple. Add the following to your index.html:</p>
+<pre> &lt;input id="input-text" type="textbox"&gt;&lt;/input&gt;&lt;br /&gt;
+ &lt;br /&gt;
+ &lt;button id="translate-btn"&gt;Translate!&lt;/button&gt;&lt;br /&gt;
+ &lt;br /&gt; 
+ &lt;div id="output-text"&gt; 
+ &lt;/div&gt;</pre>
+<p>Then add the following Javascript to your default.js file:</p>
+<pre>var edge = remote.require('electron-edge');
+var toErMahGerd = edge.func({
+     assemblyFile: 'ERMAHGERD.dll',
+     typeName: 'ERMAHGERD.Translate',
+     methodName: "ToErMahGerd"
+});
+
+document.getElementById("translate-btn").addEventListener("click", function (e) { 
+     var inputText = document.getElementById("input-text").value;
+     toErMahGerd(inputText, function (error, result) {
+          document.getElementById("output-text").innerHTML = result; 
+     }); 
+});</pre>
+<p>&nbsp;</p>
+<p>An there you go! The input text is translated to ERMAHGERD as expected:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture7.png"><img class="alignnone size-full wp-image-287" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture7.png" alt="Capture" width="469" height="267" /></a></p>
+<h3>In Closing</h3>
+<p>This is a pretty quick proof of concept. I haven't played with it enough to see what major caveats exist. One thing I did learn is that passing functions with C# as the comments does not seem to work. Let me know if you find out otherwise.</p>
+<p>Combining Electron Edge and .NET into one beautiful application has got me quite excited. We'll see where this takes us...</p>

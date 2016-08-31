@@ -1,0 +1,46 @@
+---
+layout: post
+status: publish
+published: true
+title: A Better Way To Launch Electron from Visual Studio Code
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 395
+wordpress_url: http://www.mylifeforthecode.com/?p=395
+date: '2015-06-02 22:18:08 -0500'
+date_gmt: '2015-06-03 03:18:08 -0500'
+---
+<p><strong>***UPDATE: This seems to be broken as of VSCode 0.8.0. I've so far determined that the debugger is attaching correctly, but the code fails out once require('app') is called because the app.js module, that is in an asar, cannot be found by module.js. I haven't quite determined why it can't find it. I'll look more into it when I get time.</strong></p>
+<p><strong>***POTENTIAL WORK AROUND: According to this: <a href="https://code.visualstudio.com/Issues/Detail/19279">https://code.visualstudio.com/Issues/Detail/19279</a> adding "env": { "ATOM_SHELL_INTERNAL_RUN_AS_NODE": "0" } works for at least some older versions of Electron. </strong></p>
+<p>In my previous post <a href="http://www.mylifeforthecode.com/getting-started-with-electron-in-visual-studio-code/">Getting Started with Electron in Visual Studio Code</a> I used the task runner to launch Electron and attached the debugger to the main process as a separate activity. However, this is a less than ideal way to run Electron in Visual Studio Code because you may want to reserve your Ctrl+Shift+B for actual build related tasks. Especially if you have Jake or Gulp configured. At the time there didn't seem to be any other way given that the launch configurations only supported node.js (directly) and mono.</p>
+<p>That being said, I now discovered that it is possible to trick the Visual Studio Code launcher into believing that Electron is Node. This will allow you to run your Electron app using F5, and the debugger will connect to your main process automatically (though not instantaneously).</p>
+<p>To do this you need to edit the launch .json file that is created when you click the settings icon pointed to by the red arrow in the image below:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture4.png"><img class="alignnone size-full wp-image-250" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture4.png" alt="debugger" width="925" height="366" /></a></p>
+<p>Alternatively, you can do Ctrl+Shift+P and type Configure selecting Debug: Configure from the list.</p>
+<p>If you have setup your application in the same manner as I outlined in <a href="http://www.mylifeforthecode.com/getting-started-with-electron-in-visual-studio-code/">Getting Started with Electron in Visual Studio Code</a> you should be able to copy the following into your launch.json file:</p>
+<pre>{
+    "version": "0.1.0",
+    "configurations": [
+        { 
+            "name": "Launch Electron App",
+            "type": "node",
+            "program": "app/main.js", // important
+            "stopOnEntry": false,
+            "args": [],
+            "cwd": ".",
+            // next line is very important
+            "runtimeExecutable": "node_modules/electron-prebuilt/dist/electron.exe",
+            "runtimeArguments": [],
+            "env": { }, 
+            "sourceMaps": false
+        } 
+    ]
+}</pre>
+<p>The "runtimeExecutable" is supposed to allow you to point to a local Node executable instead of the one used on the path. However, because electron is compatible with Node arguments you can point this path at an electron.exe file instead. <strong>The program needs to be set to your main.js file.</strong> Visual Studio Code checks to make sure that program is set to a JavaScript file, passing the app directory here doesn't work. While most of the documentation tells you to pass the app folder, Electron also allows you to pass the main.js file instead (since that is what package.json points to anyways).</p>
+<p>One other note is that the "stopOnEntry" will not work with this.</p>
+<p>This should help streamline your workflow with Electron and Visual Studio Code as you can now configure Ctrl+Shift+B to do things like compile TypeScript files.</p>

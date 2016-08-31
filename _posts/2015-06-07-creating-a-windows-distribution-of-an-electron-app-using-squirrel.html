@@ -1,0 +1,192 @@
+---
+layout: post
+status: publish
+published: true
+title: Creating a Windows Distribution of an Electron App using Squirrel
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 413
+wordpress_url: http://www.mylifeforthecode.com/?p=413
+date: '2015-06-07 21:02:12 -0500'
+date_gmt: '2015-06-08 02:02:12 -0500'
+---
+<p>When you're ready to distribute your Electron based application to the millions of people waiting to get a hold of your creation, you're going to need a way to package your app and make it available to them with a nice easy installer. You could take a look at Wix or other installers, but the standard for Electron based apps has quickly become <a href="https://github.com/Squirrel" target="_blank">Squirrel</a>. Visual Studio Code and the Slack client are a couple of high profile apps that use this framework to perform installs and updates. In this post I'll walk you through creating a basic Windows distribution of an Electron based app.</p>
+<p><strong>*** UPDATE *** Electron and Squirrel are evolving quite rapidly, and I fear some of what I wrote here is out of date. Please check <a href="http://electron.atom.io/docs/v0.36.8/api/auto-updater/">http://electron.atom.io/docs/v0.36.8/api/auto-updater/</a> and <a href="https://github.com/atom/grunt-electron-installer">https://github.com/atom/grunt-electron-installer</a> for more information on how to accomplish these tasks.</strong></p>
+<h2>Setting the Stage</h2>
+<p>If you are new to Electron, check out my previous post <a href="http://www.mylifeforthecode.com/getting-started-with-electron-in-visual-studio-code/" target="_blank">Getting Started with Electron in Visual Studio Code</a>. I'm going to assume the structure of your project will be setup this way. If you have things setup differently you may need to adjust paths and such, but you should still gain some value from this post.</p>
+<p>Within your project's root directory, create a folder called Staging. This folder will house the tools and files we need to create a Windows distribution.</p>
+<p>Next, download the Squirrel.Windows binaries off GitHub <a href="https://github.com/Squirrel/Squirrel.Windows/releases" target="_blank">here</a>. At the time of this post, <a href="https://github.com/Squirrel/Squirrel.Windows/releases/tag/0.99.1" target="_blank">Squirrel.Windows 1.0 Preview 2</a> is the current release, you may need to adjust some steps if they have changed things since. Extract these files and put them in the Staging folder you created.</p>
+<p>Squirrel.Windows is built on NuGet. To create the NuGet packages that Squirrel.Windows uses download the NuGet command line tool from: <a href="http://www.nuget.org/nuget.exe">http://www.nuget.org/nuget.exe</a> and plop it into the same Staging folder.</p>
+<p>You should now have everything you need to get started.</p>
+<h2><strong>Handling Squirrel Events in Your "SquirrelAwareVersion" of Electron</strong></h2>
+<p>If you take a look at the resources in electron.exe you'll see that there is a flag set in the Version Info section that states the executable is a "SquirrelAwareVersion":</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/06/Capture3.png"><img class="alignnone size-full wp-image-417" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/06/Capture3.png" alt="Capture" width="382" height="57" /></a></p>
+<p>This tells Squirrel that the executable knows how to handle the <strong>Squirrel Events</strong> that happen when an app is installed, updated, uninstalled, obsoleted, etc... This fact is not well documented in Squirrel.Windows' documentation and it took me awhile to understand, but having this flag set changes the default behavior of Squirrel by passing the responsibility of creating things like shortcuts to the app itself.</p>
+<p>When Squirrel is run, it will execute the "Squirrel Aware" executable it finds passing event flags as arguments. These event flags must be handled in your program's entry point proceeded by an immediate exit. That being said, we need to modify the main.js file in our Electron app to handle these events. At the top of your main.js before anything else is called copy this chunk of code in:</p>
+<pre>var app = require('app');
+var path = require('path');
+var cp = require('child_process');
+
+var handleSquirrelEvent = function() {
+   if (process.platform != 'win32') {
+      return false;
+   }
+
+   function executeSquirrelCommand(args, done) {
+      var updateDotExe = path.resolve(path.dirname(process.execPath), 
+         '..', 'update.exe');
+      var child = cp.spawn(updateDotExe, args, { detached: true });
+      child.on('close', function(code) {
+         done();
+      });
+   };
+
+   function install(done) {
+      var target = path.basename(process.execPath);
+      executeSquirrelCommand(["--createShortcut", target], done);
+   };
+
+   function uninstall(done) {
+      var target = path.basename(process.execPath);
+      executeSquirrelCommand(["--removeShortcut", target], done);
+   };
+
+   var squirrelEvent = process.argv[1];
+   switch (squirrelEvent) {
+      case '--squirrel-install':
+         install(app.quit);
+         return true;
+      case '--squirrel-updated':
+         install(app.quit);
+         return true;
+      case '--squirrel-obsolete':
+         app.quit();
+         return true;
+      case '--squirrel-uninstall':
+         uninstall(app.quit);
+         return true;
+   }
+
+   return false;
+};
+
+if (handleSquirrelEvent()) {
+   return;
+}</pre>
+<p>The code above will tell Squirrel on install/updated events to add shortcuts to your executable, and to remove them on an uninstall event. The Squirrel Update.exe executable knows how to do this for you. You can do additional things here other than creating shortcuts. For example, Visual Studio Code adds registry values to "Open With Code" when you right-click on something in Windows Explorer.</p>
+<h2>Branding Electron</h2>
+<p><strong>UPDATE: Please read this section, but a lot of what I talk about here can be done via electron-packager. See my brief post <a href="http://www.mylifeforthecode.com/using-electron-packager-to-package-an-electron-app/" target="_blank">Using Electron-Packager to Package and Electron App</a> and then return to this tutorial. Note that later in this tutorial you will need to adjust the &lt;file&gt; locations in the .nuspec file to point to the packages created by electron-packager. Contact me if you need clarification on how to do this.</strong></p>
+<p>If you were to install your app with the default electron.exe the shortcut and other references to your app will show up as Electron with the Electron icon. You need to modify the name and resources of the Electron executable to brand it to your application. Squirrel also uses these resources to create shortcuts and the like. Check out the documentation <a href="https://github.com/Squirrel/Squirrel.Windows/blob/master/docs/naming-conventions.md" target="_blank">here</a> for more information on naming conventions in Squirrel.</p>
+<p>The executable you want to modify is found at &lt;project_folder&gt;/node_modules/electron-prebuilt/dist/electron.exe. Copy and paste this file to the same directory and rename it to &lt;your_app_name&gt;.exe.</p>
+<p>To change the executable's icon and the version info you could probably use rcedit.exe packaged with Squirrel. I found it a bit easier to user Resource Hacker following the directions in this tutorial: <a title="Stupid Geek Tricks: How to Modify the Icon of an .Exe File" href="http://www.howtogeek.com/75983/stupid-geek-tricks-how-to-modify-the-icon-of-an-.exe-file/" target="_blank" rel="bookmark">Stupid Geek Tricks: How to Modify the Icon of an .Exe File</a>. If you need a .ico icon file to test with feel free to use this one:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/06/neutron.ico"><img class="alignnone wp-image-403" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/06/neutron.ico" alt="neutron" width="65" height="65" /></a></p>
+<p>While you are editing the icon, also edit the the Version Info resource to match your application. This is important for the Squirrel installer. When you save your changes in Resource Hacker, it will create a &lt;your_app_name&gt;_original.exe. Delete that as you should still have electron.exe in the same folder. <strong>Note: </strong>when you change the icon Windows Explorer might not update the icon you see attached to your new .exe. This is OK, don't be alarmed.</p>
+<h2>Creating the NuGet Package</h2>
+<p>As previously noted, Squirrel.Windows is built on NuGet. You need to package up the files you want in a NuGet package and then use Squirrel to create an installer. You should already have nuget.exe in your Staging directory. Open that folder in a console and run the following command:</p>
+<pre>nuget spec</pre>
+<p>This will create a default Package.nuspec file. Open this file in an editor and modify it to look something like this:</p>
+<pre>&lt;?xml version="1.0"?&gt;
+&lt;package &gt;
+ &lt;metadata&gt;
+  &lt;id&gt;MyAppNoSpaces&lt;/id&gt;
+  &lt;version&gt;0.1.0&lt;/version&gt;
+  &lt;authors&gt;My Name&lt;/authors&gt;
+  &lt;iconUrl&gt;http://mywebsite.com/icon.png&lt;/iconUrl&gt;
+  &lt;description&gt;MyAppNoSpaces: Does this.&lt;/description&gt;
+  &lt;releaseNotes&gt;Consider release notes using markdown.&lt;/releaseNotes&gt;
+  &lt;copyright&gt;Copyright 2015&lt;/copyright&gt;
+  &lt;dependencies&gt;
+   &lt;!-- important: no dependencies here --&gt;
+  &lt;/dependencies&gt;
+ &lt;/metadata&gt;
+ &lt;files&gt;
+  &lt;file src="Squirrel.exe" target="lib/net45" /&gt; 
+  &lt;file src="..\node_modules\electron-prebuilt\dist\**\*.*" 
+        exclude="..\node_modules\electron-prebuilt\dist\electron.exe;..\node_modules\electron-prebuilt\dist\resources\default_app\**\*.*"
+        target="lib/net45" /&gt; &lt;!-- lib/net45 is important --&gt;
+  &lt;file src="..\app\**\*.*" target="lib/net45/resources/app" /&gt; 
+ &lt;/files&gt;
+&lt;/package&gt;</pre>
+<p>Check out the <a href="http://docs.nuget.org/create/nuspec-reference" target="_blank">nuspec reference</a> page for additional information on creating nuspec files.</p>
+<p><strong>Important notes:</strong></p>
+<ul>
+<li>According to Squirrel's documentation you must put the target folder as lib/net45. Otherwise it will not work.</li>
+<li>You'll want to make make sure there are no dependencies in the &lt;dependencies&gt; tags.</li>
+<li>For more hacky caveats check out the documentation here: <a href="https://github.com/Squirrel/Squirrel.Windows/blob/master/docs/getting-started.m" target="_blank">https://github.com/Squirrel/Squirrel.Windows/blob/master/docs/getting-started.m</a>d.</li>
+<li>The &lt;description&gt; and &lt;iconUrl&gt; will be used to register the application with Windows. You should see them if you go to the Add/Remove/Uninstall program dialog in Windows.</li>
+<li>We excude electron.exe because the executable we created should be in the dist folder. If you put it somewhere else, add a file path to it to ensure it is included.</li>
+<li>You should also consider adding any node_modules you need that are not in the /app folder.</li>
+</ul>
+<p>Next, create a NuGet package using the following command:</p>
+<pre>nuget pack Package.nuspec</pre>
+<p>You should now have a &lt;my_app_name&gt;.&lt;version&gt;.nupkg in your Staging directory.</p>
+<h2>Creating the Installer</h2>
+<p>Now that  you have a NuGet package containing your application you are ready to create an installer using Squirrel. Open up a console in the Staging directory if you haven't already and run the following command:</p>
+<pre>squirrel --releasify &lt;my_app_name&gt;.&lt;version&gt;.nupkg</pre>
+<p>After it spins for a bit it will create a Releases folder with 3 files: your NuGet package, a RELEASES file, and a Setup.exe. This is all you will need to send to your users for installation. Note that you can modify the above command to change Setup.exe to use a custom icon or display an image during installation.</p>
+<p>Go ahead and run the Setup.exe on your local machine. Squirrel will launch quickly followed by your app showing up and shortcuts being added to the desktop and start menu. Your application will be installed to the current user's %LocalAppData% folder. In Windows 8.1 this is: C:\Users\&lt;user_name&gt;\AppData\Local\&lt;app_name&gt;. Note that log files for Squirrel are also located there and they can be useful when debugging installation issues.</p>
+<p>Uninstall you application by going to the "Programs and Features" dialog in Windows. Ensure the shortcuts added to the desktop and start menu are properly removed.</p>
+<h2>Updates</h2>
+<p>Now that the user has an installer they can install your app and use it, but when you have updates to feed them Squirrel makes things pretty easy. Follow these steps to create an update:</p>
+<ol>
+<li>Open the same Staging folder you created your initial version in.</li>
+<li>Modify the Package.nuspec file and increment the number in the &lt;version&gt; tags to match your new release. You should consider updating this in the Version Info resource of your copy of Electron's executable.</li>
+<li>Rerun the command that creates the .nupkg file, e.g. nuget pack.</li>
+<li>Rerun the command that creates the installer on the new .nupkg file, e.g. squirrel --releasify</li>
+<li>Distribute the contents of the Releases folder you your users.</li>
+<li>Profit.</li>
+</ol>
+<p>You'll eventually want to prune off old versions of the packages that are no longer used. Also, you don't really have to distribute the old NuGet packages, only Setup.exe, RELEASES, and the latest NuGet package. There is a delta created when you run the above procedure between the previous and latest versions. I assume distributing that along with the updated setup will probably speed up installation times.</p>
+<h3>Automatic Updates</h3>
+<p>The method above involves distributing a new setup file to your users to perform the update. However, you can also configure your app and Squirrel to run updates in the background. Open up your main.js file and put the following <strong>after</strong> you have checked for Squirrel events:</p>
+<pre>var updateDotExe = path.resolve(path.dirname(process.execPath), 
+ '..', 'update.exe');
+var child = cp.spawn(updateDotExe, 
+    ["--update", "http://mywebsite.com/releases"], { detached: true });
+child.on('close', function(code) {
+    // anything you need to do when update is done.
+});</pre>
+<p>Using the above script, If Squirrel finds an update at the URL specified then it will automatically download and update the program in the background. The next time the user launches the application they will run the latest version. It might be better to add a "Check for Updates" button to your app, or bring up a dialog stating updates are available and let the user decide. Here is a crude example of how to do this in the main process:</p>
+<pre>var dialog = require('dialog');
+var updateDotExe = path.resolve(path.dirname(process.execPath), 
+ '..', 'update.exe');
+var child = cp.spawn(updateDotExe, ["--download", "http://mywebsite.com/releases"], { detached: true });
+var stdout = '';
+child.stdout.setEncoding('utf8');
+var jsonStarted = false;
+child.stdout.on('data', function (d) {
+ if (!jsonStarted &amp;&amp; d.startsWith("{")) {
+  jsonStarted = true;
+  return stdout += d; 
+ }  
+ if (!jsonStarted) {
+  return;
+ } 
+ return stdout += d; 
+});
+child.on('close', function(code) {
+ if (stdout.length &gt; 0) {
+  var data = JSON.parse(stdout); 
+  dialog.showMessageBox({ message: "Update to version " + data.futureVersion + "?",
+   buttons: ["Update", "Not Now"] }, function (choice) {
+    if (choice === 0) { 
+     var child = cp.spawn(updateDotExe, ["--update", "http://mywebsite.com/releases"], { detached: true });
+     dialog.showMessageBox({ message: "The update should be available next time you start the application.",
+      buttons: ["Awesome"] });
+    }
+  });
+ }
+});</pre>
+<p>Of course you might want to just run the updater and then restart the application. I did mention this is a crude example?</p>
+<h2>Additional Resources</h2>
+<p>I had some difficulties understanding how Squirrel works to update an Electron app. Solutions to most of the difficulties I had should be captured in this post, but you should probable take a look at the Squirrel.Windows documentation here: <a href="https://github.com/Squirrel/Squirrel.Windows/tree/master/docs" target="_blank">https://github.com/Squirrel/Squirrel.Windows/tree/master/docs</a></p>
+<p>There is a pretty good video about using Squirrel.Windows for .NET applications here: <a href="http://channel9.msdn.com/Events/dotnetConf/2015/Squirrel-for-Windows-installing-NET-apps-the-way-it-should-be">http://channel9.msdn.com/Events/dotnetConf/2015/Squirrel-for-Windows-installing-NET-apps-the-way-it-should-be</a> Some of the concepts discussed carry over to Electron based applications, as Slack application the presenter uses Squirrel.Windows for is Electron based.</p>
+<p>If you are using Grunt there is a utility here: <a href="https://github.com/atom/grunt-electron-installer" target="_blank">https://github.com/atom/grunt-electron-installer</a> to create Squirrel installers for Electron apps automatically. I haven't given this a try, but I would assume it would be better than doing things by hand.</p>
+<h2>In Closing</h2>
+<p>It took me quite awhile to understand the caveats of using Squirrel.Windows to distribute an Electron app. The documentation is clearly geared towards .NET developers, but I was able to piece it together in the end. I hope there is something in this post that you find useful.</p>
+<p>If there is something with Squirrel or Electron you would like me to research and turn into a post please let me know. Thanks for reading!</p>

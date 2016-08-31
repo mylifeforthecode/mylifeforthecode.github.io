@@ -1,0 +1,25 @@
+---
+layout: post
+status: publish
+published: true
+title: Debugging a Renderer Process In Electron
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 295
+wordpress_url: http://www.mylifeforthecode.com/?p=295
+date: '2015-05-20 22:57:59 -0500'
+date_gmt: '2015-05-21 03:57:59 -0500'
+---
+<p>I finally figured out how to load up the DevTools in Electron to debug a renderer process. I don't know why it took me so long to find this, but I inspected the source code of another project that uses Electron and finally stumbled upon the following line in the main.js process:</p>
+<pre>mainWindow.openDevTools();</pre>
+<p>&nbsp;</p>
+<p>After you have created your BrowserWindow, if you call openDevTools() you get the same tools you get when you hit F12 in Chrome as you can see here:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture8.png"><img class="alignnone size-full wp-image-296" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture8.png" alt="Capture" width="800" height="600" /></a></p>
+<p>&nbsp;</p>
+<p>When you have these tools open you can set break points in your JavaScript and refresh the page using F5. This gives me the minimum functionality I need to debug things in renderer processes.</p>
+<p>I am certain there is probably a way to attach the debugger in Visual Studio Code to the JS executing in a renderer processes, but I haven't quite figured that out yet.  Let me know if you have any solutions for me! :)</p>

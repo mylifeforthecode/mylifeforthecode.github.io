@@ -1,0 +1,135 @@
+---
+layout: post
+status: publish
+published: true
+title: Getting Started With Standard Dialogs in Electron
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 383
+wordpress_url: http://www.mylifeforthecode.com/?p=383
+date: '2015-05-31 21:42:21 -0500'
+date_gmt: '2015-06-01 02:42:21 -0500'
+---
+<p>If you need to open or save a file, or display a message or error then you probably are looking for a dialog to use. Electron comes with an API to load native dialogs, giving the same experience as other desktop applications. To learn about these dialogs we are going to implement a very basic text editor.</p>
+<h3>Setup</h3>
+<p>If you need help getting started with Electron check out my previous post <a href="http://www.mylifeforthecode.com/getting-started-with-electron-in-visual-studio-code/">Getting Started with Electron in Visual Studio Code</a>. I'll be working off the base setup in this post.</p>
+<p>Open up your index.html file and copy the following into it between the body tags:</p>
+<pre>&lt;button id="openFile"&gt;Open&lt;/button&gt;
+&lt;button id="saveFile"&gt;Save&lt;/button&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;textarea id="editor" style="width: 400px; height: 300px;"&gt;&lt;/textarea&gt;
+&lt;script&gt;
+ var remote = require('remote'); 
+ var dialog = remote.require('dialog'); 
+&lt;/script&gt;</pre>
+<p>The dialog module is only available to the main process. In order to use it in the renderer process you have to use the remote module.</p>
+<p>When the user clicks the Open button we'll trigger an Open File Dialog box. This will allow the user to select a file to open. When they are done editing and would like to save what they have they will click the Save button. This will bring up the save dialog and allow the user to enter a file to save to. Once the file is saved we'll display a message box stating that the file was successfully saved.</p>
+<h3>Open File Dialog</h3>
+<p>To flesh out our simple text editor we need the openFile button to trigger the Open File dialog box. Modify the openFile button to add an onclick event handler:</p>
+<pre>    &lt;button id="openFile" onclick="openFile();"&gt;Open&lt;/button&gt;</pre>
+<p>In your script section copy the following in:</p>
+<pre>function openFile () {
+  dialog.showOpenDialog(function (fileNames) {
+  }); 
+}</pre>
+<p>If you run the project and click the Open button you should now get an Open File dialog box. However if you select a file to open nothing happens. The callback passed to the showOpenDialog function receives a list of file or folder paths (depending on the setting) or undefined if cancel was selected. Let's modify this to open the selected file and copy the contents to the textarea.</p>
+<pre>var fs = require('fs');
+function openFile () {
+ dialog.showOpenDialog(function (fileNames) {
+<strong>  if (fileNames === undefined) return;
+  var fileName = fileNames[0];
+  fs.readFile(fileName, 'utf-8', function (err, data) {
+    document.getElementById("editor").value = data;
+  });</strong>
+ }); 
+}</pre>
+<p>However the above code allows us to open any file. If we want to limit what we can open to only .txt files we can add filters to the dialog. Let's go ahead and add a filter that will allow us to select .txt files only:</p>
+<pre>var fs = require('fs');
+function openFile () {
+ dialog.showOpenDialog({ <strong>filters: [
+   { name: 'text', extensions: ['txt'] }
+  ]}</strong>, function (fileNames) {
+  if (fileNames === undefined) return;
+  var fileName = fileNames[0];
+  fs.readFile(fileName, 'utf-8', function (err, data) {
+    document.getElementById("editor").value = data;
+  });
+ }); 
+}</pre>
+<p>When you run the dialog again you should now only be able to select a .txt file:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture14.png"><img class="alignnone size-full wp-image-385" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture14.png" alt="Capture" width="297" height="143" /><br />
+</a></p>
+<p>There are a number of ways you can customize the Open File dialog. You can give it a custom title. Set a default path to open from. Allow multi-selection of files. Open a folder instead of a file.</p>
+<h3>Save File Dialog</h3>
+<p>Next thing we want to do with our simple text editor is allow the user to save a file to a particular file name. Like the open button, let's add an onclick handler to the Save button. Modify the saveFile button to look like this:</p>
+<pre>&lt;button id="saveFile" onclick="saveFile();"&gt;Save&lt;/button&gt;&lt;br /&gt;</pre>
+<p>Now add the following chunk of code in the script tags of your index.html:</p>
+<pre>function saveFile () {
+  dialog.showSaveDialog(function (fileName) {
+  }); 
+}</pre>
+<p>If you run the program you should now get a Save dialog. Selecting or cancelling will not do anything for you until we add some code. Let's add what we need to write the contents of the textarea to the selected file:</p>
+<pre>var fs = require('fs'); // require only if you don't already have it
+function saveFile () {
+  dialog.showSaveDialog(function (fileName) {
+<strong>    if (fileName === undefined) return;
+    fs.writeFile(fileName, document.getElementById("editor").value, function (err) {   
+    });</strong>
+  }); 
+}</pre>
+<p>Running the above code will allow you to save the contents of the editor to a file of your choice. Just like opening the file we also want to limit the file type to .txt files. In the same way we added filters to the open we can add filters to the save:</p>
+<pre>var fs = require('fs'); // require only if you don't already have it
+function saveFile () {
+  dialog.showSaveDialog({ <strong>filters: [
+     { name: 'text', extensions: ['txt'] }
+    ]},</strong> function (fileName) {
+    if (fileName === undefined) return;
+    fs.writeFile(fileName, document.getElementById("editor").value, function (err) {   
+    });
+  }); 
+}</pre>
+<p>The Save dialog shares some of the same customization as the Open. You can give the dialog a custom title and a default path for example.</p>
+<h3>Message Box</h3>
+<p>Of course when the file is saved the Save dialog just goes away leaving the user to wonder whether or not the save was successful. We'll use a message box to let the user know the text was properly saved. Change your saveFile function to look something like this:</p>
+<pre>var fs = require('fs'); // require only if you don't already have it
+function saveFile () {
+  dialog.showSaveDialog({ filters: [
+     { name: 'text', extensions: ['txt'] }
+    ]}, function (fileName) {
+    if (fileName === undefined) return;
+    fs.writeFile(fileName, document.getElementById("editor").value, function (err) {   
+<strong>     dialog.showMessageBox({ message: "The file has been saved! :-)",
+      buttons: ["OK"] });
+    });</strong>
+  }); 
+}</pre>
+<p><strong>If you don't pass an array of buttons the dialog will not launch</strong> so you need those. If you have more than 1 button and you want to get the user's response, passing a callback to the showMessageBox will be invoked when a button is clicked and the index of the button clicked is passed as a parameter to the callback. The icon used for the dialog is by default the Electron icon. If you want to change it you can pass a custom icon in as an option. You should get a dialog that looks something like this with the code above:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture15.png"><img class="alignnone size-full wp-image-387" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture15.png" alt="Capture" width="376" height="138" /></a></p>
+<h3>Error Box</h3>
+<p>If the save operation resulted in an error, say the file is locked and cannot be written to, then you will want to display an error message to the user. You could use a standard message box but Electron has a special simpler box for errors. Modify the save callback to handle errors in this way:</p>
+<pre>var fs = require('fs'); // require only if you don't already have it
+function saveFile () {
+  dialog.showSaveDialog({ filters: [
+     { name: 'text', extensions: ['txt'] }
+    ]}, function (fileName) {
+    if (fileName === undefined) return;
+    fs.writeFile(fileName, document.getElementById("editor").value, function (err) {   
+<strong>     if (err === undefined) {</strong>
+       dialog.showMessageBox({ message: "The file has been saved! :-)",
+        buttons: ["OK"] });
+<strong>     } else {
+       dialog.showErrorBox("File Save Error", err.message);</strong>
+<strong>     }
+    });</strong>
+  }); 
+}</pre>
+<p>Note the 2 parameters are all this box accepts, a title and content. Because it is difficult to create an error this is what the error dialog looks like if you were to hit it:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture16.png"><img class="alignnone size-full wp-image-388" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture16.png" alt="Capture" width="321" height="172" /></a></p>
+<h3>In Closing</h3>
+<p>There are a few caveats to getting these dialogs to work, but otherwise Electron makes it pretty easy for you. The full documentation for these dialogs can be found on GitHub here: <a href="https://github.com/atom/electron/blob/master/docs/api/dialog.md">https://github.com/atom/electron/blob/master/docs/api/dialog.md</a>.</p>
+<p>That completes our little text editor example. Thanks for reading!</p>

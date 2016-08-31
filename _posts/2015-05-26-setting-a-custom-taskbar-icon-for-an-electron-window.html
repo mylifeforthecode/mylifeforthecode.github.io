@@ -1,0 +1,47 @@
+---
+layout: post
+status: publish
+published: true
+title: Setting A Custom Taskbar Icon For an Electron Window
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 332
+wordpress_url: http://www.mylifeforthecode.com/?p=332
+date: '2015-05-26 21:55:27 -0500'
+date_gmt: '2015-05-27 02:55:27 -0500'
+---
+<p>If no icon is specified when you launch a BrowserWindow in Electron it will use the icon of the executable, which is Electron's really nice bluish green atom icon. However, if you want to change this out is is pretty easy. Here is how you do it...</p>
+<h3>Configure BrowserWindow to Accept an Icon</h3>
+<p>As a temporary icon for <a href="http://www.mylifeforthecode.com/an-extremely-early-look-at-neutron-a-blog-post-editor-for-developers/">Neutron</a> I created this lovely little circle:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/neutron.png"><img class="alignnone size-full wp-image-333" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/neutron.png" alt="neutron" width="64" height="64" /><br />
+</a></p>
+<p>Feel free to use this lovely piece of art royalty free with no attribution!</p>
+<p>I put this guy in an /images folder in my app directory. I then modified the main.js where I am creating the browser window to swap it in...</p>
+<pre>mainWindow = new BrowserWindow({
+     x: lastWindowState.x,
+     y: lastWindowState.y,
+     width: lastWindowState.width, 
+     height: lastWindowState.height, 
+     <strong>icon: __dirname + '/images/neutron.png',</strong>
+     frame: false});</pre>
+<p>Here is what you get:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/icon.png"><img class="alignnone size-full wp-image-334" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/icon.png" alt="hello icon" width="554" height="323" /><br />
+</a></p>
+<p>One thing to note, <strong>use a .png not an .ico</strong> file. I attempted a .ico file the first time with no luck.</p>
+<h3>One More Thing...</h3>
+<p>This applies to Windows only (sorry Mac guys/gals). Suppose you want to put a little overlay down there to note when there are unsaved changes? Or if an error occurred, or whatever. This isn't high priority on my list with Neutron, but for the sake of demonstration I created a little red asterisk:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/changes.png"><img class="alignnone size-full wp-image-336" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/changes.png" alt="changes" width="16" height="16" /></a></p>
+<p>If you use this you must pay me a up front royalty payment of $10,000 US dollars.</p>
+<p>To make this an overlay call setOverlayIcon passing the path the .png icon and a description (for screen reader applications) on the BrowserWindow instance like so:</p>
+<pre>mainWindow.setOverlayIcon(
+ __dirname + '/images/changes.png', 
+ "unsaved changes");</pre>
+<p>And here is what you get:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/unsaved.png"><img class="alignnone size-full wp-image-337" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/unsaved.png" alt="unsaved" width="556" height="233" /></a></p>
+<p>I am not the best at creating icons but this will do for the time being :). Oh, and I was kidding about the royalty payment for that stupid asterisk (as if you didn't know that).</p>
+<p>Thanks for reading!</p>

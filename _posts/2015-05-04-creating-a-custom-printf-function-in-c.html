@@ -1,0 +1,35 @@
+---
+layout: post
+status: publish
+published: true
+title: Creating a Custom printf Function in C
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 156
+wordpress_url: http://www.mylifeforthecode.com/?p=156
+date: '2015-05-04 19:33:36 -0500'
+date_gmt: '2015-05-05 00:33:36 -0500'
+---
+<p>When I first started writing C code I riddled my code with a bunch of printf statements to log information for debugging purposes. When I did this I found myself writing a lot of boilerplate code over and over again. For example, the format string of my printf always ended with a '\n' newline character, and I wished there as a way I could skip having to type those two characters over and over again. Luckily I was able to make my wish come true. As I learned more about C I discovered that it gives you the ability to write custom printf style functions and it is a real easy thing to do.</p>
+<p>To get started, you should include the &lt;stdio.h&gt; and &lt;stdarg.h&gt; libraries:</p>
+<pre>#include &lt;stdio.h&gt;
+#include &lt;stdarg.h&gt;</pre>
+<p>The &lt;stdarg.h&gt; library gives you the structures needed to accept a variable number of arguments to the end of your function, as printf does. The &lt;stdio.h&gt; library gives you the 'vprintf' and related function that accept the variable argument structures for printing.</p>
+<p>A custom printf function should have in its signature a const char pointer to the format you want printed and a set of ellipses as the last parameter:</p>
+<pre>void log(const char *format, ...);</pre>
+<p>The ellipses indicate the function accepts a variable number of arguments. The basic definition will look something like this:</p>
+<pre>void log(const char *format, ...)
+{
+    va_list vargs;
+    va_start(vargs, format);
+    vprintf(format, vargs);
+    printf("\n");
+    va_end(vargs);
+}</pre>
+<p>va_list is a pointer type that the variable arguments list is assigned to and cleaned up by the va_start and va_end functions. After calling va_start on the 'vargs' variable it will point to the variable parameters passed to it. vprintf is a special function that accepts the format and va_list and performs the standard printf operation.</p>
+<p>Note that stdio.h also contains a vfprintf functions that will allow you to print to file or a standard stream such as stderr.</p>

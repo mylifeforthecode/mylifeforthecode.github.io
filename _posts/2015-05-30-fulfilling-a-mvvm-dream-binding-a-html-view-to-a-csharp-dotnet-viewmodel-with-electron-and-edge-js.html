@@ -1,0 +1,149 @@
+---
+layout: post
+status: publish
+published: true
+title: 'Fulfilling a MVVM Dream: Binding a HTML View to a C#.NET ViewModel with Electron
+  and Edge.js'
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 340
+wordpress_url: http://www.mylifeforthecode.com/?p=340
+date: '2015-05-30 13:52:56 -0500'
+date_gmt: '2015-05-30 18:52:56 -0500'
+---
+<p><strong>UPDATE: I am thinking of putting a little work into this project, meaning that if you try to replicate the code here it may not work, This post still gives a description of the dream I wanted to fulfill, but check the GitHub repo <a href="https://github.com/srakowski/coldstone" target="_blank">here </a>for up to date documentation if you want to play with this.</strong></p>
+<p>I really enjoy developing applications using the <a href="http://www.codeproject.com/Articles/100175/Model-View-ViewModel-MVVM-Explained">MVVM</a> pattern, and I've had a dream for some time to build rich desktop applications using HTML/CSS and JavaScript for views and C#.NET for view models and the rest of the application. I have this dream because I prefer the simplicity of HTML/CSS when creating user interfaces, but I am not so thrilled with building out the back end of the application in JavaScript. At the same time I have the inverse problem with XAML and C#.NET. I love C#.NET for the back end, but am killed by the learning curve of XAML. Earlier this week I was able to fulfill this dream!</p>
+<p>Inspired by Visual Studio Code I started learning Electron a few weeks ago. Along the way I picked up Edge.js and learned it was both possible and easy to use .NET assemblies inside Electron apps. When writing my blog post <a href="http://www.mylifeforthecode.com/electron-edge-dot-net-ermahgerd/">Electron, Edge, .NET? ERMAHGERD!</a> I had the sudden realization that it may be quite easy  to build a simple binding engine to connect the HTML views I was building in Electron to the a C#.NET view model.</p>
+<p>A few nights ago I finally sat down last night and was able to experiment with this idea. After hacking away for 3 hours I was finally able to produce working data bindings between a HTML view and a C# view model. <strong>VICTORY!</strong></p>
+<p>I cleaned things up yesterday and uploaded my fledgling binding engine to GitHub under the name <strong>Coldstone</strong>. <a href="http://gargoyles.wikia.com/wiki/Coldstone">Coldstone </a>was Frankenstein-esque gargoyle on one of my favorite cartoons growing up called Gargoyles. I figured this name was appropriate given the similar Frankenstein-esque nature of this project.</p>
+<p>Here is a demonstration of how Coldstone works...</p>
+<p><strong>UPDATE: This stopped working sometime after version 0.30.5 of Electron. If you install version 0.30.5 this should work (until maybe electron-edge is updated). When you install electron-prebuilt run this command:</strong></p>
+<pre><strong>npm install electron-prebuilt@0.30.5 --save-dev</strong></pre>
+<h3>Getting Started</h3>
+<p>I am going to start this example from where I left off in <a href="http://www.mylifeforthecode.com/getting-started-with-electron-in-visual-studio-code/">Getting Started with Electron in Visual Studio Code</a>. Set something like this up if you haven't.</p>
+<p>Coldstone depends on the electron-edge package to work. In your root project folder run the following npm command to get this package:</p>
+<pre>npm install electron-edge</pre>
+<p>When you get this package you may get an error about wrong versions or something, just ignore it.</p>
+<p>Next you'll need to get Coldstone. Coldstone is up on GitHub at <a href="https://github.com/srakowski/coldstone">https://github.com/srakowski/coldstone</a>. If you are running Windows you should be able to grab the Coldstone.dll from the bin folder. Otherwise you may need to build it custom. I don't have a Mac or Linux distro up to try things with Mono on those platforms. Someone let me know in the comments if you try things out there. Once you've got Coldstone, create a libs and viewmodels directories in your Electron project's app folder. Copy Coldstone.dll to libs and Coldstone.js to viewmodels.</p>
+<p>My project folder structure looks like this:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture10.png"><img class="alignnone size-full wp-image-362" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture10.png" alt="Initial project structure" width="411" height="391" /></a></p>
+<h3>The View Model</h3>
+<p>For this example, I am going to create a simple calculator that will add 2 numbers together and output the result. Let's build the view model for that in C#.</p>
+<p>To build the .DLL for this I am going to use Visual Studio 2013. I am trying to do as much as I can in Visual Studio Code, but configuring a MSBuild csproj file is difficult so I'll rely on regular ol' Visual Studio to do this for me. Open Visual Studio and create a Class Library project inside your project folder. I called mine ViewModels:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/createProject.png"><img class="alignnone size-full wp-image-364" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/createProject.png" alt="createProject" width="959" height="665" /><br />
+</a></p>
+<p>Delete the Class1.cs file out of it. Open the Package Manager Console and enter the following command:</p>
+<pre>Install-Package MvvmLightLibs</pre>
+<p>I want Coldstone to work with ViewModels that are used by XAML based applications. Therefore Coldstone looks for the INotifyPropertyChanged and ICommand objects. I don't want to have to build these things out myself so we are going to use MvvmLight to do this stuff for us. We'll be using ViewModelBase and RelayCommand in our view model.</p>
+<p>Modify the Output path of the build to point to your /app/viewmodels folder. To do this, right-click on your ViewModels project file and click Properties. Select the Build tab and paste "..\app\viewmodels" into the Output path. Like this:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture9.png"><img class="alignnone size-full wp-image-367" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture9.png" alt="build" width="810" height="749" /></a></p>
+<p>You may need to adjust the path a little bit depending on how you setup your solution.</p>
+<p>Add a AdderViewModel.cs file to your project, and copy the following code into it:</p>
+<pre>using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
+
+public class AdderViewModel : ViewModelBase
+{
+    private int _number1 = 0;
+    
+    public int InNumber1
+    {
+        get { return _number1; }
+        set 
+        {
+            _number1 = value;
+            RaisePropertyChanged();               
+        }
+    }
+    
+    private int _number2 = 0;
+    
+    public int InNumber2
+    {
+        get { return _number2; }
+        set
+        {
+            _number2 = value;
+            RaisePropertyChanged();
+        }
+    }
+    
+    private int _outNumber = 0;
+    
+    public int OutNumber
+    {
+        get { return _outNumber; }
+        set
+        {
+            _outNumber = value;
+            RaisePropertyChanged();
+        }
+    }
+    
+    public RelayCommand AddCommand { get; set; }
+
+    public AdderViewModel()
+    {
+        AddCommand = new RelayCommand(Add);            
+    }
+
+    private void Add()
+    {
+        OutNumber = InNumber1 + InNumber2;
+    }       
+}</pre>
+<p><strong>Note the lack of namespace!</strong> If you use a namespace it is no big deal, but you'll need to adjust the bind command in the view later.  Build your project. The ViewModels.dll and all the MvvmLight dependencies should now show up in your viewmodels folder. It should look something like this:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture11.png"><img class="alignnone size-full wp-image-370" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture11.png" alt="Capture" width="408" height="632" /><br />
+</a></p>
+<p>That is everything you need to setup your view model.</p>
+<h3>The View</h3>
+<p>The next step is to create a view for the Adder. This is a bit easier than the set for the view model because we don't need to engage with regular old Visual Studio. Open your index.html file and add the following code:</p>
+<pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+ &lt;head&gt;
+  &lt;title&gt;Coldstone Example&lt;/title&gt;
+ &lt;/head&gt;
+ &lt;body&gt;
+  &lt;div id="adder"&gt; 
+  &lt;label&gt;Number1: &lt;input type="number" data-bind="value: InNumber1" /&gt;&lt;/label&gt;&lt;br /&gt;
+  &lt;br /&gt; 
+  &lt;label&gt;Number2: &lt;input type="number" data-bind="value: InNumber2" /&gt;&lt;/label&gt;&lt;br /&gt;
+  &lt;br /&gt;
+  &lt;button data-bind="command: AddCommand" /&gt;Add&lt;/button&gt;&lt;br /&gt;
+  &lt;br /&gt;
+  Output: &lt;span data-bind="text: OutNumber"&gt;&lt;/span&gt; 
+  &lt;/div&gt; 
+  &lt;div id="output-text"&gt;&lt;/div&gt;
+  &lt;script&gt;
+   var Coldstone = require('./libs/coldstone'); 
+   var cs = new Coldstone(__dirname + "/viewmodels/ViewModels.dll");
+   cs.bind("adder", "AdderViewModel"); 
+  &lt;/script&gt; 
+ &lt;/body&gt;
+&lt;/html&gt;</pre>
+<p>Some notes:</p>
+<ol>
+<li>The Coldstone constructor expects the path to the .DLL you want to load. <strong>The Coldstone.dll must be in the same folder</strong>!</li>
+<li>I went with data-bind to be consistent with other html/js based MVVM frameworks.</li>
+<li>The <em>value</em> binding is a 2-way binding</li>
+<li>The <em>command</em> binding works like a click binding. In the future I would like to make it toggle enabled/disabled based on the CanExecute command.</li>
+<li>The <em>text</em> binding is a 1-way binding to the view.</li>
+<li>bind() expects the id of the element you want to bound, and the name of the class you want to bind to (include namespace if needed).</li>
+</ol>
+<p>That is all you need to do to setup your view!</p>
+<h3>Running It</h3>
+<p>After you get ALL that setup (it seems like a lot, but hey this is a proof-of-concept right?) you can run the program an witness the bindings at work. The output looks like this... the 65 was calculated in the view model and propagated to the view:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/2015-05-30_14-31-48.gif"><img class="alignnone size-full wp-image-379" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/2015-05-30_14-31-48.gif" alt="2015-05-30_14-31-48" width="528" height="394" /></a></p>
+<p>And here is a video if you need a bit more proof:</p>
+<p>[embed]https://youtu.be/B92wZtGLGb8[/embed]</p>
+<p><strong>:-)</strong></p>
+<h3>In Closing</h3>
+<p>I didn't include error handling, logging, or support for a lot of things in Coldstone because all I wanted to do is prove that this was possible. For example, <strong>currently only bindings to integers and strings work, and binding to children's properties does not work.</strong> Whether or not this could scale out to a full framework that could be used in applications is yet to be seen. I think the biggest concern I can see with this would be memory leaks. Coldstone creates objects in .NET but never releases them. If you were to change views they would still be there. I would need to add methods for cleaning things up between views.</p>
+<p>Coldstone is released under MIT so feel free to try and build it out if this is something you are interested in. I'd like to here people's thoughts or comments on this concept and project.</p>
+<p>On a final note, if there is something you want to know about Electron but don't have time to research it, contact me and I'll try to write a post about it :).</p>
+<p>&nbsp;</p>

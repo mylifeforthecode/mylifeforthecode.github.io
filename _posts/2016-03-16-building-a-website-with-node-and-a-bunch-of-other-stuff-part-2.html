@@ -1,0 +1,75 @@
+---
+layout: post
+status: publish
+published: true
+title: Building a Website with Node and a Bunch of Other Stuff, Part 2
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 1563
+wordpress_url: http://www.mylifeforthecode.com/?p=1563
+date: '2016-03-16 23:26:36 -0500'
+date_gmt: '2016-03-17 04:26:36 -0500'
+---
+<p>In <a href="http://www.mylifeforthecode.com/building-a-website-with-node-and-a-bunch-of-other-stuff-part-1/">Building a Website with Node and a Bunch of Other Stuff, Part 1</a> I showed you how to scaffold up a new website with Node.js and Express. In this part we're going to build out our "steaming" website by adding some functionality with Express and persistence with MongoDB and Mongoose.</p>
+<h1>Steaming</h1>
+<p>I didn't really have much of a plan going into this series of posts. I am learning how to use all these things and I thought it would be worthwhile to blog about things as I go. That being said, I called the website "steaming" in the last post because the website would undoubtedly end up as a steaming pile of crap. I want to expand on this by giving meaning and functionality to "steaming". Otherwise I have nothing to show you except stupid canned examples.</p>
+<p>So what is Steaming going to be?<!--more-->  Steaming is going to be a twisted pile of a social network. I've done this kind of thing before with <del>my wildly successful website</del> <a href="http://overtoaded.com">overtoaded.com</a> (don't be surprised if that link is dead one day). The idea behind OVERTOADED was to create a Twitter clone with the twist of limiting the time a tweet, or TOAD in this case, by a fixed amount of time that could be augmented by either SALTing, i.e removing time, or LICKing, i.e. adding time. While OVERTOADED was clearly a breakthrough in social networking no internet entrepreneur succeeded on their first try. So here's round 2...</p>
+<p>Steaming is going to be a bit like Medium. It will be a simple blogging platform with a twist. I have a Windows Store app called <a href="http://www.mylifeforthecode.com/my-apps/write-freely/">Write Freely</a> that exists for the purpose of helping people learn to free write by taking away the ability to edit anything. Combine this with a blogging platform and you get... Steaming. So that's what we're going to build.</p>
+<p>For some stupid reason I really like this idea so I've purchased the domain <a href="http://steaming.rocks">steaming.rocks</a> (should work someday) to host it at when I get the thing built. I think "steaming" and "rocks" being adjacent to one another is pretty funny given the context.</p>
+<h1>MongoDB and Mongoose</h1>
+<p><a href="https://www.mongodb.org/">MongoDB</a> is a NoSQL database. The basic idea behind this type of database is that you store data in some other way than the rows, columns, and tables of a traditional relational database. MongoDB stores JSON-like documents in named collections similar to relational database tables but without the strict structure around the data it contains. That is to say, 2 documents in the same collection may look nothing alike.</p>
+<p><a href="http://mongoosejs.com/">Mongoose</a> is a JavaScript library for used to model the objects you store in MongoDB. It helps by providing straight forward schemas for your application data with casting, validation, query building, business logic hooks and more, out of the box! (I stole that quip right from their main page :)). We're going to use Mongoose to keep our MongoDB usage clean, and because the Passportjs local authentication I've learned to use requires it for MongoDB. Just keeping it honest :-).</p>
+<h2>MongoDB Setup</h2>
+<p>You'll need to install MongoDB before we begin to use it. Head over to their <a href="https://www.mongodb.org/downloads#production">download page</a> and get the latest version for the platform of your choice. I'll  be using 3.2.4 because that is what is out now. Hopefully, my daughter doesn't read this far in the future and laughs at how old I am, you know, when she undoubtedly becomes a famous software engineer, she's 3 right now.</p>
+<p>Run through the installer. If you're on Windows, like me, I've found it useful to add the MongoDB installation folder to your PATH environmental variable. This will make it easier to start up MongoDB from a command line. There are ways to set it  up as a service and such, but I'll leave that for you to figure out.</p>
+<p>Once you've got everything squared away open up a command prompt and run the following:</p>
+<pre>mongod.exe</pre>
+<p>If this magically works for you probably visited another website and followed a real tutorial on getting started with this. If not you probably got something like this:</p>
+<pre>2016-03-16T19:55:22.444-0500 I STORAGE  [initandlisten] exception in initAndListen: 29 Data directory C:\data\db\ not found., terminating</pre>
+<p>If so, you angered the mon-gods and forgot to give them a place to store your precious data. This is easily fixed by creating the directory in its default location, i.e. run this simple command:</p>
+<pre>md C:\data\db</pre>
+<p>Run mongod.exe and you should be all set to go on the MongoDB front. Of course there is a ton of additional stuff you should probably learn, but I'll let you discover that.</p>
+<h2>Mongoose Setup</h2>
+<p>Now for the hard part! Open up a command prompt at the root of your "steaming" website folder and run this command:</p>
+<pre>npm install mongoose --save</pre>
+<p>Oh! Glad that is over with! Now we just need to connect Mongoose to MongoDB and we're all set. Open up your app.js file and incorporate the following code wherever it seems to make sense. That's pretty much what I did:</p>
+<p>https://gist.github.com/srakowski/738694800c324412d689</p>
+<p>If you've done everything correctly, when you launch your Node/Express application from Visual Studio Code you'll be blessed with a debug console that should look something like this:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2016/03/mongosuccess.png" rel="attachment wp-att-1565"><img class="alignnone size-full wp-image-1565" src="http://www.mylifeforthecode.com/wp-content/uploads/2016/03/mongosuccess.png" alt="mongosuccess" width="350" height="120" /></a></p>
+<p>Wunderbar! Now let's build some us a model.</p>
+<h1>Adding Functionality</h1>
+<p>Now that we have some of the setup out-of-the-way, let's actually start adding some functionality to Steaming.</p>
+<h2>Models</h2>
+<p>Like Medium, Steaming isn't really going to be much more than a specialized blogging platform. That being said the model for a blog post is fairly simple to start off with. Since the website name is Steaming a post will be called a Steamer. A Steamer will have an author, a title, for SOE purposes a normalized permalinkKey, the dateCreated, and, of course, the content itself.</p>
+<p>Creating Mongoose models is pretty simple. I would suggest taking a look at their quick start guide and other docs here: <a href="http://mongoosejs.com/docs/index.html">http://mongoosejs.com/docs/index.html</a>. Once you've familiarized yourself with Mongoose you should have what you need to create an appropriate model for a simple Steamer based on the description provided above. Create a models folder in your projects root folder and add a JavaScript file called steamer.js. Here is what I came up with:</p>
+<p>https://gist.github.com/srakowski/e8d9d3f0fb2bf976ae99</p>
+<p>That's the only model we'll need for right now. In the next installment of this series I am going to add account information and authentication using Passportjs. At that time we'll add the concept of a user account and tie it to the author member of a Steamer. For now, we just need to worry about creating the views and routes we'll use to create and read it.</p>
+<h2>Views and Routes</h2>
+<p>We are back to looking at Jade. The way I see it we'll need at least 3 views to get the proof of concept off the ground for our Steaming website. First, index.jade will be modified to show a list of recent Steamers by all users in a summarized form. Second, you'll be able to click on the title of a Steamer and be brought to a steamer view that shows the entire content of the Steamer. Finally, we a need a create form to actually author the content on. Put these together and we get the start of our Steaming website!</p>
+<h3>Routes</h3>
+<p>For our first initial implementation we're going to modify routes/index.js to add all the routes we'll need plus a function for creating permalink keys. Modify routes/index.js to look something like this:</p>
+<p>https://gist.github.com/srakowski/c0ee09b2fd59d24bdb8e</p>
+<p>The Steamer model brought in by require('../models/steamer') brings in the Mongoose model we created in the previous section. When you compose a model with Mongoose it ads <a href="https://en.wikipedia.org/wiki/Active_record_pattern">Active Record</a> style methods for finding/saving a model.</p>
+<h3>Views</h3>
+<p>views/index.jade will display the list of recent Steamers provided when the root get route is invoked. Modify index.jade to look like this:</p>
+<p>https://gist.github.com/srakowski/d4eaa177dfdeeeb70cc2</p>
+<p>We also need a form to author our Steamers. Add create.jade to the views folder and modify it to look like this:</p>
+<p>https://gist.github.com/srakowski/4cd4d521bfb307172617</p>
+<p>This form will probably be quite ugly, but that is ok... this is a steaming pile of crap after all!</p>
+<p>I use a contenteditable in lieu of a straight textarea because there are look/feel/control gains by going this route. I've already worked through most of these issues with my Write Freely app and I am hoping to reuse the code when we actually wire in this limitation. Of course contenteditable is not a proper input type and so we need to do some massaging with JavaScript to get things to work out.</p>
+<p>Finally we need a view to simply see our Steamer. Add steamer.jade to the views folder and modify it to look something like this:</p>
+<p>https://gist.github.com/srakowski/ec11f9559e79e70bd069</p>
+<p>That should round out the views!</p>
+<h1>Success?</h1>
+<p>Hopefully if you followed everything correctly you should have a functional prototype of a Steaming website. Locally, I published (oohh, STEAMED) my first Steamer:</p>
+<p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2016/03/steamer.png" rel="attachment wp-att-1567"><img class="alignnone size-full wp-image-1567" src="http://www.mylifeforthecode.com/wp-content/uploads/2016/03/steamer.png" alt="steamer" width="803" height="600" /></a></p>
+<h1>Source Code</h1>
+<p>I decided that it would probably be a good idea to just give you the source code to this instead of making to copy and paste it all in. Here you go: <a href="https://github.com/srakowski/steaming-pt2">https://github.com/srakowski/steaming-pt2</a></p>
+<h1>Next Time...</h1>
+<p>Add Authentication, because right now anyone named anyone can create anonymous steamers and you know you're going to get a load of crap with that kind of setup! I'll also make it so that a Steamer is the result of forced-unedited content using JavaScript. Of course, that won't stop nefarious people from posting well formed content via direct calls (don't ever trust client code!), but what can you do about it?</p>
+<p>Thanks for reading.</p>

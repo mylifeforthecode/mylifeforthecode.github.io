@@ -1,0 +1,53 @@
+---
+layout: post
+status: publish
+published: true
+title: Adding Coroutine-Like Functionality to a MonoGame Project
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 1673
+wordpress_url: http://www.mylifeforthecode.com/?p=1673
+date: '2016-04-07 23:22:26 -0500'
+date_gmt: '2016-04-08 04:22:26 -0500'
+---
+<p>Last Ludum Dare competition I used a library that I created called <a href="https://github.com/srakowski/coldsteel-prototype">Coldsteel</a> to build my game. In previous game jams I recreated a number of elements on the fly, but this was a huge waste of time and I decided it would just be better to get as much of that stuff out-of-the-way before the competition actually started. I built Coldsteel on top of MonoGame and used Unity's game engine as the inspiration for the structure. I learned a lot hacking it out and hope to rewrite a huge portion of it before the next competition begins (which is a week from now).</p>
+<p>That being said, one of the things I did with that initial version/prototype is create a series of classes derived from a Behavior class which I could reuse across a number of objects in the game. This worked well, but after learning about the <a href="http://www.mylifeforthecode.com/yield-the-little-keyword-i-never-knew/" target="_blank">yield keyword</a> I realized there may be cleaner ways of doing what I was doing, as Unity uses <a href="http://docs.unity3d.com/Manual/Coroutines.html" target="_blank">Coroutines</a> for simplification and optimization. That prompted me to spend a little time prototyping how I might build similar functionality for a future version of Coldsteel.</p>
+<p>One of the "behaviors" I created and used heavily in my original version of this library was called "MoveTo". As the name implies, it would smoothly move an object from its current location to a target location. As I used this quite heavily I decided it would be a good subject for experiment.<!--more--></p>
+<h1>The Traditional Setup</h1>
+<p>I started off this endeavour by starting a new project in MonoGame and creating MoveToGame and Ship classes in MonoGame, and set it up so that when I clicked the mouse the ship would move to the position I clicked. The MoveToGame class is as follows:</p>
+<p>https://gist.github.com/srakowski/585fd56d1749ca83e03373d89e8e3d98</p>
+<p>This remained the same throughout the rest of my experimentation. This is pretty standard "Starter" fair for an XNA/MonoGame project. It is set up to call the MoveTo function on the ship whenever the left mouse button is clicked. The Ship class started like this:</p>
+<p>https://gist.github.com/srakowski/1614fa94d89281e2e669162d33c57a49</p>
+<p>When MoveTo is called I set a target position for the ship. When the Ship instance is  updated it smooth steps towards the target position for the allotted time and then finally assigns target position to the ship and cleans things up. You can see this works exactly as you would expect:</p>
+<p>https://youtu.be/GZEeg3ILxZ4</p>
+<p>There isn't really a problem with this approach, but I've found that classes in games can get quite hairy over time and there is a lot of state that needs to be maintained and tracked by the developer in order to make things function correctly. Add 2 or 3 more of these kinds of states and it will be very difficult to maintain the class.</p>
+<h1>Yielding improvements</h1>
+<p>Most of the state that I am maintaining at the class level could be maintained within the scope of a generator. I refactored the Ship class to look like this:</p>
+<p>https://gist.github.com/srakowski/c536b0ec5dd7be1239e51ace0f84c0d8</p>
+<p>It ended up being about the same lines of code because in order to access the gameTime passed to the update from the generator I needed to maintain a copy in the class itself. However, as you can see, the scope of the time and targetPosition field are dropped to the StepTo function I created. Ultimately, I like this better but it does not give much in the way of improvements, and so I forged ahead...</p>
+<h1>Moving to Framework Territory</h1>
+<p>After my first round of modifications I realized that the gameTime, Updating, and tracking the lifecycle of the generators could be pushed to parent class. This may be needed by any object in the game. That being said I created a GameObject class that looked like this:</p>
+<p>https://gist.github.com/srakowski/ed99eb9037028e8e660197e7f03b4c53</p>
+<p>The StartCoroutine method allows the child to register a coroutine/generator it has started and allow the parent class to update it and remove it when it is done. Furthermore, as _gameTime is now a member of the class, a child doesn't need it passed directly to its Update call. This allows me to put control over the order in which things are updated. I let the developer do what they want first and then update the coroutines.</p>
+<p>The Ship class was then modified to take advantage of this. It reduced the code some, but not as much as I would like because I wanted to make sure that the user could only invoke one move at a time. There is no real issue with invoking more than one (and I did that by accident once), but it's a limitation I thought would be interesting to bake in. Here is what the Ship class looked like after inheriting from GameObject:</p>
+<p>https://gist.github.com/srakowski/66e61a7349600a0ff74318ff0f4b2cb0</p>
+<p>We could eliminate all the code related to _isMoving if we added a facility for limiting coroutines to a single instance. So that is what I did next...</p>
+<h1>The Final Leg</h1>
+<p>If I wanted to maintain a single instance of any particular coroutine I would need to keep some data, like a unique identifier, along with the generator itself. It also follows that you may want to tie events, such as being done, to the coroutine. That being said I created a Coroutine class that was responsible for storing a name for the coroutine, the generator it encapsulates, and for firing of an "I'm done" event at the end of its run. Here is what the Coroutine class looked like:</p>
+<p>https://gist.github.com/srakowski/cde39f2a69e81e60f671b3a68a25823a</p>
+<p>I then modified the GameObject class to utilize the Coroutine class and to provide the option to limit the instance to one based off the calling method's name (or a name you may provide). I am not sure I am happy with how this works quite yet, but it does work:</p>
+<p>https://gist.github.com/srakowski/bc3ccbdce6efc0865735832561d998d8</p>
+<p>Finally, Ship was cleaned up to remove state tracking around whether or not the coroutine was running. Here is how it ended up:</p>
+<p>https://gist.github.com/srakowski/fc57d7467f104df472e9df931516e4ee</p>
+<p>I confirmed that this way of doing it functions in the same way as my initial setup, however, I like this way of thing it more.</p>
+<h1>Final Thoughts</h1>
+<p>Knowing a bit about how maintaining state blows up the size and complexity of a game object I am pretty happy with the result of this experiment. I plan on incorporating this Coroutine functionality into the rewrite of Coldsteel as I hack it out over the coming weekend/week. I will ultimately refine this code further and add some additional features like adding delays between steps and chaining things, but I'll save that for another time.</p>
+<p>I've thrown the completed code up on GitHub here: <a href="https://github.com/srakowski/MoveToExperiment">https://github.com/srakowski/MoveToExperiment</a></p>
+<p>Thanks for reading.</p>
+<p>[twitter_follow screen_name='Shwany']</p>
+<p>&nbsp;</p>

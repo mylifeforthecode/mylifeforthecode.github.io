@@ -1,0 +1,22 @@
+---
+layout: post
+status: publish
+published: true
+title: Removing the Default Menu in Electron Prebuilt
+author:
+  display_name: Shawn Rakowski
+  login: srakowski@live.com
+  email: srakowski@live.com
+  url: ''
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+wordpress_id: 611
+wordpress_url: http://www.mylifeforthecode.com/?p=611
+date: '2015-07-30 14:23:43 -0500'
+date_gmt: '2015-07-30 19:23:43 -0500'
+---
+<p>I am not sure why they did this, but <img class=" size-full wp-image-612 alignright" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/07/Capture.png" alt="Capture" width="351" height="223" />running Electron comes with a default file menu with File, View, and Help. I suppose if your application uses this type of menu you would just end up overriding it. However, if you don't want the menu and just want it gone it is pretty easy to remove it. After you create your browser window immediate set the menu to null and it will not be there. Here is the code to make that happen:</p>
+<pre>mainWindow = new BrowserWindow({width: 800, height: 600});
+<strong>mainWindow.setMenu(null);</strong></pre>
+<p>If you call this the ugly menu should go away and you can go back to a more modern looking app experience.</p>
+<p>I think I'll need to go look through some issues to see why this was added.</p>
