@@ -34,15 +34,20 @@ date_gmt: '2016-04-01 03:29:44 -0500'
 <h2>Corrections</h2>
 <p>From the previous post I've learned a few things and would like to make some corrections before we continue.</p>
 <p>First, I've decided that using a contenteditable for the texteditor was stupid. You can make it work, but because browsers don't all have the plaintext option it is not worth the hassle. The only benefit is if you want to provide rich editing capabilities. We do not, or will achieve it through another means like markdown. So I've removed the content editable and went back to a textarea. In create.jade delete the following:</p>
-<pre><span style="color: #ff0000;"> div#editor(contenteditable="true", style="width: 100%; min-height: 400px; border: 1px solid #AAA;")
+<pre><span style="color: #ff0000;"> div#editor(contenteditable="true", style="width: 100%; min-height: 400px; border: 1px solid #AAA;")
+
  textarea#content(style="display: none;", name="content")</span></pre>
 <p>and change it to this:</p>
 <pre><span style="color: #000000;">textarea#editor(name="content", style="width: 100%; min-height: 400px;", wrap="soft", spellcheck="false")</span></pre>
 <p>also remove this bit of JavaScript:</p>
-<pre><span style="color: #ff0000;">function formContent() {
-    document.getElementById("content").value = document.getElementById("editor").innerHTML; 
-    return true;
-}
+<pre><span style="color: #ff0000;">function formContent() {
+
+    document.getElementById("content").value = document.getElementById("editor").innerHTML; 
+
+    return true;
+
+}
+
 </span></pre>
 <p>When we view the steamers created we're going to want white space to be treated as such. This could be achieved with the pre tags, but writing some CSS to tell the browser not to mess with the content works too. In index.jade you'll want to delete this:</p>
 <pre><span style="color: #ff0000;">p=steamer.content.substring(0, 597) + "..."</span></pre>
@@ -52,7 +57,7 @@ date_gmt: '2016-04-01 03:29:44 -0500'
 <h1>No You Can't Edit That!</h1>
 <p>The key feature that will set Steaming apart from all other blogging software is the inability to modify the content you create. There are a fair number of ways editing can be done, and so we'll need to make some sweet JavaScript to capture and kill as much editing capabilities as possible. This of course doesn't stop the neighborhood arse-hat from side stepping the spirit of Steaming and messing with the JavaScript so they may edit content, but I'll leave it up to the large community Steaming will attract to police this.</p>
 <p>One of the main things you need to do to prevent editing is kill off the ability to delete anything. This means we'll need to disable backspace, delete, insert, cut, copy, select and overwrite, and pretty much everything else. I am sure I missed something but here is rough cut at preventing most kinds of editing:</p>
-<p>https://gist.github.com/srakowski/bfc98592d9b34fde3da0674b3a9ca8a3</p>
+<p>{% gist bfc98592d9b34fde3da0674b3a9ca8a3 %}</p>
 <p>I added this to the script section of create.jade. The only thing I haven't figured out yet is setting the mouse cursor in a position to add characters. I am sure there is an easy fix to this, but I don't feel like researching it too long. Just don't edit. That's the point!</p>
 <p>A little breakdown of that code above. Adding a keydown event handler allows us to intercept any attempts at delete, backspace, or flipping to overwrite via insert. I also remove and cut/copy/paste keyboard shortcuts in the same way.</p>
 <p>There are ways to make some elements prevent user-select, but this doesn't seem to play nicely with some browsers. So instead of preventing selection I just clear the selection if one exists on keydown. This prevents overwriting pretty well.</p>
@@ -64,7 +69,7 @@ date_gmt: '2016-04-01 03:29:44 -0500'
 <h2>Boostrappin'</h2>
 <p>Luckily in the world of websites the  ancients decided to give to humanity a thing called <a href="http://getbootstrap.com/">Bootstrap</a>. If you've spent a week in the web space I am sure you're already more than aware of Bootstrap. Using it provides you with a ton of tools and styles to give you pretty, responsive, mobile-first websites. Luckily it is available via a CDN do you don't need to install anything.</p>
 <p>Open up layout.jade and add make it so...</p>
-<p>https://gist.github.com/srakowski/82be9be1d95deb8d8ed0f047beaf1a10</p>
+<p>{% gist 82be9be1d95deb8d8ed0f047beaf1a10 %}</p>
 <p>Note you may want to update the versions to match whatever better version of Bootstrap is out by the time you read this. You'll probably need to ignore whatever else I write here, but I am sure you will manage. JQuery is needed by some of the Bootstrap components... so you get that now too.</p>
 <p>Using the layout above Steaming should automatically have a bit of a better feel to it. The content will be centered in the browser and t he fonts will probably look a bit nicer, but let's continue modifying things to make the site even better.</p>
 <h2>Low Go! (er... Logo) and Stylin'</h2>
@@ -75,11 +80,11 @@ date_gmt: '2016-04-01 03:29:44 -0500'
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2016/03/steaming_logo.png" rel="attachment wp-att-1630"><img class="alignnone size-full wp-image-1630" src="http://www.mylifeforthecode.com/wp-content/uploads/2016/03/steaming_logo.png" alt="steaming_logo" width="300" height="90" /></a></p>
 <p>I believe the tagline to be very fitting. Steaming is a blogging platform that defies quality. You are encouraged not to write quality posts. Just let it steam!</p>
 <p>Create an images folder in your project and add the Steaming logo above to it... or feel free to make and contribute your own. I am okay with that. We're going to want to modify our layout to include this awesome logo. Open layout.jade and make it look this now:</p>
-<p>https://gist.github.com/srakowski/cfa3789756721c0f936fa055fda83c41</p>
+<p>{% gist cfa3789756721c0f936fa055fda83c41 %}</p>
 <p>Note that I moved sign in / sign up / sign out buttons from index.jade to the layout. It makes sense because we'll most likely want to access these buttons from most pages. Index.jade needs to be updated so that the</p>
-<p>https://gist.github.com/srakowski/38c7b38658481d50fcbad94ad4f175b9</p>
+<p>{% gist 38c7b38658481d50fcbad94ad4f175b9 %}</p>
 <p>You're also going to want to modify the style.css file a bit. There was some padding and anchor coloring that came with the standard Express templates. We're going to want to clean that up a bit. Modify style.css to look like this:</p>
-<p>https://gist.github.com/srakowski/4093bbd9f53d93ede5c647a2ca2f16e0</p>
+<p>{% gist 4093bbd9f53d93ede5c647a2ca2f16e0 %}</p>
 <h1>Success?</h1>
 <p>You should now have a cleaner looking Steaming website that looks something like this:</p>
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2016/03/steaming-1.png" rel="attachment wp-att-1636"><img class="alignnone size-full wp-image-1636" src="http://www.mylifeforthecode.com/wp-content/uploads/2016/03/steaming-1.png" alt="steaming" width="844" height="860" /></a></p>

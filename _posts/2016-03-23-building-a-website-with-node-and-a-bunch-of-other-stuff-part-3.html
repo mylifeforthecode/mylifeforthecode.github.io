@@ -34,19 +34,22 @@ date_gmt: '2016-03-24 04:20:26 -0500'
 <p>When I started looking into building an application with Node and Express one of the first things I looked into was setting up user accounts. Most applications use some form of user accounts, and unlike my experiences with starting an ASP.NET project I wasn't provided this right out of  the box. Searching around the internet for user authentication I found that <a href="http://passportjs.org/">Passport</a> is one of the best.</p>
 <p>Passport boasts an impressive array of authentication strategies for just about everything (not Microsoft for some reason). I want to keep things simple so I settled on the local, roll-your-own strategy as I am a glutton for punishment and I don't feel like walking you through setting something up with Twitter or Facebook.</p>
 <p>We're using MongoDB and Mongoose for our persistence. As luck would have it someone already created a <a href="https://github.com/saintedlama/passport-local-mongoose">nice library</a> to implement the Passport local strategy with Mongoose. That being said, let's get some NPM'ing out of the way...</p>
-<pre>npm install passport --save
-npm install passport-local --save
-npm install passport-local-mongoose --save
+<pre>npm install passport --save
+
+npm install passport-local --save
+
+npm install passport-local-mongoose --save
+
 npm install express-session --save</pre>
 <p>"passport" is the core package, "passport-local" is the strategy for local authentication, "passport-local-mongoose" is an implementation of the local authentication strategy using Mongoose. We also need the "express-session" path because... sessions.</p>
 <p>Now to wire things up...</p>
 <h2>The User Model</h2>
 <p>In Part 2 we created a model for a Steamer using Mongoose. We'll need to create something similar for our User. The passport-local-mongoose package provides a simple plugin to set up the default fields for a user (i.e username and password). In your models folder create a file called user.js and fill it with this:</p>
-<p>https://gist.github.com/srakowski/cc394d14e7c8a29ed254</p>
+<p>{% gist cc394d14e7c8a29ed254 %}</p>
 <p>That's all you really need to configure a user account. You may, of course, modify the schema I left empty with all sorts of information about your User, including pie preference and thoughts on tater tots (I've been fasting for over 24 hours at this point and my mind is drifting to food). I don't think we're going to care too much about those kinds of things with Steaming so for now we'll just leave the thing empty.</p>
 <h2>Configuring passport-local-mongoose</h2>
 <p>Head over to your app.js file. We'll need to add some code to this to wire up the Passport local strategy with Mongoose and to get the sessions working. Add the following code to your app.js file:</p>
-<p>https://gist.github.com/srakowski/a3eeb392fa61fc3de11f</p>
+<p>{% gist a3eeb392fa61fc3de11f %}</p>
 <p>Apparently, <strong>the order of this stuff matters</strong>, especially the app.use section. If you are having trouble getting things to work keep an eye on the ordering. Otherwise, that's all we really need to do! The library takes care of the nitty-gritty for you. I would, however, take a look at a few well written tutorials (obviously not by the author of this one) on what exactly is going on with the User.createStrategy(), User.serializeUser(), and User.deserializeUser().</p>
 <p>Try running things at this point and verify the website still works. It may save you from headaches down the road.</p>
 <h1>The 3 Signs</h1>
@@ -54,35 +57,35 @@ npm install express-session --save</pre>
 <p>Now that I got that out of the way, the 3 signs I am actually talking about are Signup, Signin, and Signout. You may like The 3 Logs better, but the content of this post would have clearly fallen into potty humor, well, worse than it already has with the Steaming reference. To save you that, we'll stick with the 3 signs.</p>
 <h2>Sign...</h2>
 <p>To keep things segregated from the rest of the application, signing up/in/out will be part of a separate set of routes. Before continuing, create a file called sign.js and scaffold it with the following code:</p>
-<p>https://gist.github.com/srakowski/0cc50dffc5ab1f315ca0</p>
+<p>{% gist 0cc50dffc5ab1f315ca0 %}</p>
 <p>Then modify app.js to wire the Express router for sign related activity into the app by adding the following:</p>
-<p>https://gist.github.com/srakowski/5a34eb6d6f4cf2c69825</p>
+<p>{% gist 5a34eb6d6f4cf2c69825 %}</p>
 <p>You should now be all set to continue with your regularly scheduled tutorial...</p>
 <h2>Sign Up</h2>
 <p>If you want to create a steamer in Steaming you'll need to register first. For this, we're going to add a very basic sign up page where a user enters a desired username and password. That's it, no frills, just the basics. To kick this off we're going to need a Jade view for our sign up page. Add signup.jade to your views folder and make it look something like this:</p>
-<p>https://gist.github.com/srakowski/7a75dacf7f7eda100a4d</p>
+<p>{% gist 7a75dacf7f7eda100a4d %}</p>
 <p>Now that you have a well designed form, optimized for user experience, you're going to need to add some routes to the sign.js file we created earlier. We need a get route to actually render the form and a post route to actually do the work. Add the following to sign.js:</p>
-<p>https://gist.github.com/srakowski/68eafcaf60e64a046cdf</p>
+<p>{% gist 68eafcaf60e64a046cdf %}</p>
 <p>You should now be able to navigate to http://localhost:3000/sign/up, see a lovely form, and sign up for Steaming. Note that passport.authenticate needs to be called after User.register if you actually want the user to be signed in after they create their account.</p>
 <h2>Sign In</h2>
 <p>Now that a user has signed up they will obviously want to use the service more than once (who wouldn't), and so we probably should give them a way to sign in. The form is almost the exact same as the sign up form. In your views folder create signin.jade and copy the following into it:</p>
-<p>https://gist.github.com/srakowski/c0bb0b3c86f0c3e78c10</p>
+<p>{% gist c0bb0b3c86f0c3e78c10 %}</p>
 <p>We'll need the proper routes to handle the form retrieval and authentication process as well.</p>
-<p>https://gist.github.com/srakowski/f317aae5068f8f08b00d</p>
+<p>{% gist f317aae5068f8f08b00d %}</p>
 <p>Note that we check req.isAuthenticated() so that we don't go to the sign in page when someone is already signed in. That is how you check this kind of thing.</p>
 <h3>Sign Out</h3>
 <p>Now for the hard part. Add this to sign.js</p>
-<p>https://gist.github.com/srakowski/aff4571a4ab360d61f3d</p>
+<p>{% gist aff4571a4ab360d61f3d %}</p>
 <p>Presto! You should now have all the routes and forms you need! You should be able to pound F5 and register silly named accounts all day long.</p>
 <p>Why were we doing this again? Oh, right...</p>
 <h1>Checking Authentication</h1>
 <p>We only want authenticated users to be allowed to create steamers. This means we need to modify a few things. First, we'll want to check requests to the /create routes to ensure the request is authenticated. That should be pretty easy by modifying index.js and adding this check in the route callback:</p>
-<p>https://gist.github.com/srakowski/8ef189f719d22b655301</p>
+<p>{% gist 8ef189f719d22b655301 %}</p>
 <p>There is a cleaner way to do this using middleware functions, but I'll save that for the next installment.</p>
 <p>When we arrive at the index and view our steamers we need links that will allow us to either sign in or sign up. If we are authenticated then we'll either want to create a steamer or sign out. To do this we'll want our Jade views to know whether or not the user is signed in. A simple way to do this is to intercept all incoming requests and provide a variable that indicates this to the response. I happen to have something just like that here:</p>
-<p>https://gist.github.com/srakowski/9c5c9d8065e7d5602616</p>
+<p>{% gist 9c5c9d8065e7d5602616 %}</p>
 <p>Finally, we need to add some switching to our index.html file. Modify the file to look like this:</p>
-<p>https://gist.github.com/srakowski/0cf62cbe9a31a800d514</p>
+<p>{% gist 0cf62cbe9a31a800d514 %}</p>
 <h1>Tying Users to Steamers</h1>
 <p>The final step in this process is tie users to the steamers they create. Previously we allowed users to simply enter their name as the Author. Instead, we'll take the shortcut and mostly backwards compatible step of auto-populating the User's username in the author field. To do this:</p>
 <ol>

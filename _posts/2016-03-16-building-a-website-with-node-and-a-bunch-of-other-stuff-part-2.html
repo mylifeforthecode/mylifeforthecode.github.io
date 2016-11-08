@@ -38,7 +38,7 @@ date_gmt: '2016-03-17 04:26:36 -0500'
 <p>Now for the hard part! Open up a command prompt at the root of your "steaming" website folder and run this command:</p>
 <pre>npm install mongoose --save</pre>
 <p>Oh! Glad that is over with! Now we just need to connect Mongoose to MongoDB and we're all set. Open up your app.js file and incorporate the following code wherever it seems to make sense. That's pretty much what I did:</p>
-<p>https://gist.github.com/srakowski/738694800c324412d689</p>
+<p>{% gist 738694800c324412d689 %}</p>
 <p>If you've done everything correctly, when you launch your Node/Express application from Visual Studio Code you'll be blessed with a debug console that should look something like this:</p>
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2016/03/mongosuccess.png" rel="attachment wp-att-1565"><img class="alignnone size-full wp-image-1565" src="http://www.mylifeforthecode.com/wp-content/uploads/2016/03/mongosuccess.png" alt="mongosuccess" width="350" height="120" /></a></p>
 <p>Wunderbar! Now let's build some us a model.</p>
@@ -47,23 +47,23 @@ date_gmt: '2016-03-17 04:26:36 -0500'
 <h2>Models</h2>
 <p>Like Medium, Steaming isn't really going to be much more than a specialized blogging platform. That being said the model for a blog post is fairly simple to start off with. Since the website name is Steaming a post will be called a Steamer. A Steamer will have an author, a title, for SOE purposes a normalized permalinkKey, the dateCreated, and, of course, the content itself.</p>
 <p>Creating Mongoose models is pretty simple. I would suggest taking a look at their quick start guide and other docs here: <a href="http://mongoosejs.com/docs/index.html">http://mongoosejs.com/docs/index.html</a>. Once you've familiarized yourself with Mongoose you should have what you need to create an appropriate model for a simple Steamer based on the description provided above. Create a models folder in your projects root folder and add a JavaScript file called steamer.js. Here is what I came up with:</p>
-<p>https://gist.github.com/srakowski/e8d9d3f0fb2bf976ae99</p>
+<p>{% gist e8d9d3f0fb2bf976ae99 %}</p>
 <p>That's the only model we'll need for right now. In the next installment of this series I am going to add account information and authentication using Passportjs. At that time we'll add the concept of a user account and tie it to the author member of a Steamer. For now, we just need to worry about creating the views and routes we'll use to create and read it.</p>
 <h2>Views and Routes</h2>
 <p>We are back to looking at Jade. The way I see it we'll need at least 3 views to get the proof of concept off the ground for our Steaming website. First, index.jade will be modified to show a list of recent Steamers by all users in a summarized form. Second, you'll be able to click on the title of a Steamer and be brought to a steamer view that shows the entire content of the Steamer. Finally, we a need a create form to actually author the content on. Put these together and we get the start of our Steaming website!</p>
 <h3>Routes</h3>
 <p>For our first initial implementation we're going to modify routes/index.js to add all the routes we'll need plus a function for creating permalink keys. Modify routes/index.js to look something like this:</p>
-<p>https://gist.github.com/srakowski/c0ee09b2fd59d24bdb8e</p>
+<p>{% gist c0ee09b2fd59d24bdb8e %}</p>
 <p>The Steamer model brought in by require('../models/steamer') brings in the Mongoose model we created in the previous section. When you compose a model with Mongoose it ads <a href="https://en.wikipedia.org/wiki/Active_record_pattern">Active Record</a> style methods for finding/saving a model.</p>
 <h3>Views</h3>
 <p>views/index.jade will display the list of recent Steamers provided when the root get route is invoked. Modify index.jade to look like this:</p>
-<p>https://gist.github.com/srakowski/d4eaa177dfdeeeb70cc2</p>
+<p>{% gist d4eaa177dfdeeeb70cc2 %}</p>
 <p>We also need a form to author our Steamers. Add create.jade to the views folder and modify it to look like this:</p>
-<p>https://gist.github.com/srakowski/4cd4d521bfb307172617</p>
+<p>{% gist 4cd4d521bfb307172617 %}</p>
 <p>This form will probably be quite ugly, but that is ok... this is a steaming pile of crap after all!</p>
 <p>I use a contenteditable in lieu of a straight textarea because there are look/feel/control gains by going this route. I've already worked through most of these issues with my Write Freely app and I am hoping to reuse the code when we actually wire in this limitation. Of course contenteditable is not a proper input type and so we need to do some massaging with JavaScript to get things to work out.</p>
 <p>Finally we need a view to simply see our Steamer. Add steamer.jade to the views folder and modify it to look something like this:</p>
-<p>https://gist.github.com/srakowski/ec11f9559e79e70bd069</p>
+<p>{% gist ec11f9559e79e70bd069 %}</p>
 <p>That should round out the views!</p>
 <h1>Success?</h1>
 <p>Hopefully if you followed everything correctly you should have a functional prototype of a Steaming website. Locally, I published (oohh, STEAMED) my first Steamer:</p>
