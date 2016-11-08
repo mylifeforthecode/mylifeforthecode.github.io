@@ -3,11 +3,7 @@ layout: post
 status: publish
 published: true
 title: Getting Started With Electron in Visual Studio Code
-author:
-  display_name: Shawn Rakowski
-  login: srakowski@live.com
-  email: srakowski@live.com
-  url: ''
+author: Shawn Rakowski
 author_login: srakowski@live.com
 author_email: srakowski@live.com
 wordpress_id: 227
@@ -21,59 +17,98 @@ date_gmt: '2015-05-17 23:05:07 -0500'
 <p>I thought it would be fun to give a little tutorial on how to get started with Electron development in Visual Studio Code. To do this tutorial you will need to install Visual Studio Code and Node.js. You can download VS Code here: <a href="https://code.visualstudio.com/" target="_blank">https://code.visualstudio.com/</a> and Node.js here: <a href="https://nodejs.org/" target="_blank">https://nodejs.org/</a>.</p>
 <h3>Setup</h3>
 <p>The first thing you should do is set up a folder for your new app. This is a pretty simple step. I would follow the following structure:</p>
-<pre>/my_app_name
+<pre>/my_app_name
+
      /app</pre>
 <p>Next open up your command prompt and navigate to the folder you just created. Once you are there issue the following command:</p>
 <pre>npm install electron-prebuilt --save-dev</pre>
 <p>This will download a pre-built version of the Electron shell into your project folder. Your directory structure should now look something like this:</p>
-<pre>/my_app_name
-     /app
-     /node_modules
-          /.bin
-          /electron-prebuilt
-               /dist
-                    /electron.exe
-                    /...
+<pre>/my_app_name
+
+     /app
+
+     /node_modules
+
+          /.bin
+
+          /electron-prebuilt
+
+               /dist
+
+                    /electron.exe
+
+                    /...
+
                /...</pre>
 <p>The path to Electron becomes important when we want to run our app.</p>
 <h3>Creating Your App</h3>
 <p>Open your /my_app_name folder in Visual Studio Code. The folder name should be visible in the Explore panel. Right-click on the /app folder and add a file named package.json. Copy the following code into it:</p>
-<pre>{
- "name" : "my_app_name",
- "version" : "0.1.0",
- "main" : "main.js"
+<pre>{
+
+ "name" : "my_app_name",
+
+ "version" : "0.1.0",
+
+ "main" : "main.js"
+
 }</pre>
 <p>You can name main.js whatever you want, but this seems to be the standard convention. When Electron loads your app it looks for the package.json file. It parses the contents and executes the JavaScript file assigned to the "main" property.</p>
 <p>Next, right-click on the /app folder again and add a main.js file. Copy the following code into it:</p>
-<pre>var app = require('app');
-var BrowserWindow = require('browser-window');
-
-var mainWindow = null;
-
-app.on('window-all-closed', function() {
- if (process.platform != 'darwin')
- app.quit();
-});
-
-app.on('ready', function() { 
- mainWindow = new BrowserWindow({width: 800, height: 600}); 
- mainWindow.loadUrl('file://' + __dirname + '/index.html'); 
- mainWindow.on('closed', function() {
- mainWindow = null;
- }); 
+<pre>var app = require('app');
+
+var BrowserWindow = require('browser-window');
+
+
+
+var mainWindow = null;
+
+
+
+app.on('window-all-closed', function() {
+
+ if (process.platform != 'darwin')
+
+ app.quit();
+
+});
+
+
+
+app.on('ready', function() { 
+
+ mainWindow = new BrowserWindow({width: 800, height: 600}); 
+
+ mainWindow.loadUrl('file://' + __dirname + '/index.html'); 
+
+ mainWindow.on('closed', function() {
+
+ mainWindow = null;
+
+ }); 
+
 });</pre>
 <p>The loadUrl method can be modified to load from a file other than index.html. It will even load webpages if you want. I was able to load my blog into it :).</p>
 <p>Finally, right-click on the /app folder a third time and add a index.html file. Copy the following code into it:</p>
-<pre>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
- &lt;head&gt;
- &lt;title&gt;Hello World!&lt;/title&gt;
- &lt;/head&gt;
- &lt;body&gt;
- I learned about Electron in Visual Studio Code&lt;br /&gt;
- from &lt;a href="http://www.mylifeforthecode.com"&gt;My Life For The Code&lt;/a&gt;.
- &lt;/body&gt;
-&lt;/html&gt;
+<pre>&lt;!DOCTYPE html&gt;
+
+&lt;html&gt;
+
+ &lt;head&gt;
+
+ &lt;title&gt;Hello World!&lt;/title&gt;
+
+ &lt;/head&gt;
+
+ &lt;body&gt;
+
+ I learned about Electron in Visual Studio Code&lt;br /&gt;
+
+ from &lt;a href="http://www.mylifeforthecode.com"&gt;My Life For The Code&lt;/a&gt;.
+
+ &lt;/body&gt;
+
+&lt;/html&gt;
+
 </pre>
 <p>From index.html you can create an html app as normal. Visit the Electron documentation to learn about the additional capabilities of the shell. Your VS Code instance should look something like this:</p>
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture1.png"><img class="alignnone size-large wp-image-235" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture1-1024x318.png" alt="vs code" width="625" height="194" /></a></p>
@@ -82,10 +117,14 @@ app.on('ready', function() {
 <p>Press Ctrl+Shift+B, you should get a message stating that there is no task runner configured with a Configure Task Runner button.</p>
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture2.png"><img class="alignnone size-full wp-image-237" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture2.png" alt="configure task runner" width="460" height="52" /></a></p>
 <p>Click the Configure Task Runner button. This will create a .settings folder containing tasks.json and will open tasks.json in the editor. Comment out the default task runner that calls the TypeScript compiler, and add the following json:</p>
-<pre>{
- "version": "0.1.0",
- "command": "node_modules\electron-prebuilt\dist\electron.exe",
- "args": ["app"]
+<pre>{
+
+ "version": "0.1.0",
+
+ "command": "node_modules\electron-prebuilt\dist\electron.exe",
+
+ "args": ["app"]
+
 }</pre>
 <p>Now, save the file and press Ctrl+Shift+B again, and Electron should launch with your new app!</p>
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture3.png"><img class="alignnone size-full wp-image-239" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture3.png" alt="Electron" width="800" height="600" /></a></p>

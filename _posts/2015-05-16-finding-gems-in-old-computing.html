@@ -3,11 +3,7 @@ layout: post
 status: publish
 published: true
 title: Finding Gems in Old Computing
-author:
-  display_name: Shawn Rakowski
-  login: srakowski@live.com
-  email: srakowski@live.com
-  url: ''
+author: Shawn Rakowski
 author_login: srakowski@live.com
 author_email: srakowski@live.com
 wordpress_id: 220
@@ -25,21 +21,36 @@ date_gmt: '2015-05-16 21:17:45 -0500'
 <p>The shell language of OpenVMS is called DCL. DCL stands for <em>Digital Command Language</em>. It is a primitive and confusing language devoid of some of the most basic modern programming constructs like loops and arrays. I've written a number of complex DCL scripts (or COM files as we refer to them due to their .COM extension), and I would gladly go forward in life never writing another one. Perhaps the most annoying part of generating these scripts is that every line begins with the dollar sign ($) character. The dollar sign ($) character is used prolifically in OpenVMS, and I wonder if this reflects what was on the minds of their engineers who built it? Anyways, despite its many shortcomings, DCL has a powerful language feature called <em>substitution</em> that is not common to other languages.</p>
 <p>Substitution can be thought of as a sort of pre-processor. When the interpreter reads in a line of DCL code, the code is scanned for substitutions before being interpreted. There are a few varieties of substitution supported by DCL, but I’ll focus on apostrophe substitution. When the scanner finds the apostrophe (‘) character it reads the symbol immediate proceeding it and then performs a textual replacement of its content with its value. For example, if the value of x is set to the number 0 then the DCL command <em>$ vec’x = 42</em> would be interpreted as <em>$ vec0 = 42</em> by the DCL interpreter<em>.</em></p>
 <p>This is a very powerful feature in the language, making things like arrays that not supported by DCL possible. Here is a contrived example of what this looks like…</p>
-<pre><span style="font-family: Consolas;">$! imagine “names” is the array, we have unique symbols for each entry…
-$! this is a comment btw...
-$ names0 = “Paul Anagnostopoulos”
-$ names1 = “Steve Hoffman”
-$ names2 = “Shawn Rakowski”
-$! now we can iterate through the array using substitution
-$ i = 0
-$ print_names_loop: 
-$     name = names’i ! note that 'i is replaced by the number it represents
-$     if "''name'" .eqs. “Shawn Rakowski”
-$     then
-$          write sys$output “Hey ''name' isn't a DCL expert!”
-$     endif
-$     i = i + 1
-$     if i .lt. 3 then goto print_names_loop
+<pre><span style="font-family: Consolas;">$! imagine “names” is the array, we have unique symbols for each entry…
+
+$! this is a comment btw...
+
+$ names0 = “Paul Anagnostopoulos”
+
+$ names1 = “Steve Hoffman”
+
+$ names2 = “Shawn Rakowski”
+
+$! now we can iterate through the array using substitution
+
+$ i = 0
+
+$ print_names_loop: 
+
+$     name = names’i ! note that 'i is replaced by the number it represents
+
+$     if "''name'" .eqs. “Shawn Rakowski”
+
+$     then
+
+$          write sys$output “Hey ''name' isn't a DCL expert!”
+
+$     endif
+
+$     i = i + 1
+
+$     if i .lt. 3 then goto print_names_loop
+
 $ exit </span></pre>
 <p>I don’t have a DCL interpreter around to check the above code so hopefully it works, but even if it is incorrect you should be able to get the gist of it and also understand why DCL is otherwise a less-than-phenomenal programming language. Note that within string literals the double apostrophe is needed to invoke substitution.</p>
 <h4>The Case Insensitivity of DCL</h4>

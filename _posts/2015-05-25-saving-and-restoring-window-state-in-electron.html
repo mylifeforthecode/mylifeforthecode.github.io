@@ -3,11 +3,7 @@ layout: post
 status: publish
 published: true
 title: Saving and Restoring Window State in Electron
-author:
-  display_name: Shawn Rakowski
-  login: srakowski@live.com
-  email: srakowski@live.com
-  url: ''
+author: Shawn Rakowski
 author_login: srakowski@live.com
 author_email: srakowski@live.com
 wordpress_id: 321
@@ -21,87 +17,161 @@ date_gmt: '2015-05-25 16:41:26 -0500'
 <p>The flow of doing this is pretty simple. Before you create the window you get the previous window state from some repository. If the previous state exists you open the window with its bounds. If it does not exist you use default bounds. You then setup an even handler for the close event. On close you save the window state in the repository for the next time you open the application.</p>
 <h3>Setting Up Storage Repository</h3>
 <p>The simplest way to store previous state is to do so using a flat file. To abstract this process away create a storage.js node module that will load and save a JSON file to user storage. Here is the storage module I came up with:</p>
-<pre>var app = require('app');
-var fs = require('fs');
-var path = require('path');
-var data = null;
-var dataFilePath = path.join(app.getPath('userData'), 'data.json'); 
-
-function load() {
- if (data !== null) {
- return;
- } 
- 
- if (!fs.existsSync(dataFilePath)) {
- data = {};
- return;
- }
- 
- data = JSON.parse(fs.readFileSync(dataFilePath, 'utf-8')); 
-}
-
-function save() {
- fs.writeFileSync(dataFilePath, JSON.stringify(data)); 
-}
-
-exports.set = function (key, value) {
- load();
- data[key] = value; 
- save();
-}
-
-exports.get = function (key) { 
- load();
- var value = null;
- if (key in data) {
- value = data[key];
- } 
- return value;
-}
-
-exports.unset = function (key) { 
- load();
- if (key in data) {
- delete data[key];
- save();
- } 
+<pre>var app = require('app');
+
+var fs = require('fs');
+
+var path = require('path');
+
+var data = null;
+
+var dataFilePath = path.join(app.getPath('userData'), 'data.json'); 
+
+
+
+function load() {
+
+ if (data !== null) {
+
+ return;
+
+ } 
+
+ 
+
+ if (!fs.existsSync(dataFilePath)) {
+
+ data = {};
+
+ return;
+
+ }
+
+ 
+
+ data = JSON.parse(fs.readFileSync(dataFilePath, 'utf-8')); 
+
+}
+
+
+
+function save() {
+
+ fs.writeFileSync(dataFilePath, JSON.stringify(data)); 
+
+}
+
+
+
+exports.set = function (key, value) {
+
+ load();
+
+ data[key] = value; 
+
+ save();
+
+}
+
+
+
+exports.get = function (key) { 
+
+ load();
+
+ var value = null;
+
+ if (key in data) {
+
+ value = data[key];
+
+ } 
+
+ return value;
+
+}
+
+
+
+exports.unset = function (key) { 
+
+ load();
+
+ if (key in data) {
+
+ delete data[key];
+
+ save();
+
+ } 
+
 }</pre>
 <p>The app.getPath('userData') gets local storage for user data. In Windows 8.1 (which I am running) it ends up in C:/Users/&lt;username&gt;/AppData/Roaming/&lt;appname&gt;/. In Linux it is supposed to point at ~/.config/&lt;appname&gt; and ~/Library/Application Support/&lt;appname&gt; in OS X.</p>
 <h3>Saving and Restoring State</h3>
 <p>To save and restore the window state you'll need to add a bit of code to the main.js file where you create your BrowserWindow instances.</p>
 <p>First thing you need to do is set it up so that your main window saves its state when it is closed. To do this, add an event handler to the <strong>close</strong> event (note: <strong>not the closed</strong> <strong>event</strong>). In the event handler, grab the window bounds and whether or not it is maximized and save them as an object to storage under the key lastWindowState:</p>
-<pre>var storage = require("./libs/storage"); // I put storage.js in libs folder
-
-/* ... after mainWindow is created ... */
-
- mainWindow.on('close', function () {
-  var bounds = mainWindow.getBounds(); 
-  storage.set("lastWindowState", {
-   x: bounds.x,
-   y: bounds.y,
-   width: bounds.width,
-   height: bounds.height,
-   maximized: mainWindow.isMaximized()
-  });
+<pre>var storage = require("./libs/storage"); // I put storage.js in libs folder
+
+
+
+/* ... after mainWindow is created ... */
+
+
+
+ mainWindow.on('close', function () {
+
+  var bounds = mainWindow.getBounds(); 
+
+  storage.set("lastWindowState", {
+
+   x: bounds.x,
+
+   y: bounds.y,
+
+   width: bounds.width,
+
+   height: bounds.height,
+
+   maximized: mainWindow.isMaximized()
+
+  });
+
  });</pre>
 <p>The getBounds method will give us most everything we need except whether or not the window was maximized. That can be retrieved with the isMaximized method.</p>
 <p>Next, you'll need to add some code at the time the BrowserWindow is created that will read the last window state from storage and construct the new window with that configuration or a default configuration depending on whether or not state has been saved prior:</p>
-<pre>var lastWindowState = storage.get("lastWindowState");
-if (lastWindowState === null) {
- lastWindowState = {
-  width: 1024,
-  height: 768,
-  maximized: false 
- } 
-}
-
-mainWindow = new BrowserWindow({
- x: lastWindowState.x,
- y: lastWindowState.y,
- width: lastWindowState.width, 
- height: lastWindowState.height});
-
-if (lastWindowState.maximized) {
- mainWindow.maximize();
+<pre>var lastWindowState = storage.get("lastWindowState");
+
+if (lastWindowState === null) {
+
+ lastWindowState = {
+
+  width: 1024,
+
+  height: 768,
+
+  maximized: false 
+
+ } 
+
+}
+
+
+
+mainWindow = new BrowserWindow({
+
+ x: lastWindowState.x,
+
+ y: lastWindowState.y,
+
+ width: lastWindowState.width, 
+
+ height: lastWindowState.height});
+
+
+
+if (lastWindowState.maximized) {
+
+ mainWindow.maximize();
+
 }</pre>
 <p>There you go. You should now be able to move and re-size your Electron window and have that window restored the next time you open your application!</p>

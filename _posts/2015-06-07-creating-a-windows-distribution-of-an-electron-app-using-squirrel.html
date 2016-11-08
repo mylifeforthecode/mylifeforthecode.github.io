@@ -3,11 +3,7 @@ layout: post
 status: publish
 published: true
 title: Creating a Windows Distribution of an Electron App using Squirrel
-author:
-  display_name: Shawn Rakowski
-  login: srakowski@live.com
-  email: srakowski@live.com
-  url: ''
+author: Shawn Rakowski
 author_login: srakowski@live.com
 author_email: srakowski@live.com
 wordpress_id: 413
@@ -28,55 +24,104 @@ date_gmt: '2015-06-08 02:02:12 -0500'
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/06/Capture3.png"><img class="alignnone size-full wp-image-417" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/06/Capture3.png" alt="Capture" width="382" height="57" /></a></p>
 <p>This tells Squirrel that the executable knows how to handle the <strong>Squirrel Events</strong> that happen when an app is installed, updated, uninstalled, obsoleted, etc... This fact is not well documented in Squirrel.Windows' documentation and it took me awhile to understand, but having this flag set changes the default behavior of Squirrel by passing the responsibility of creating things like shortcuts to the app itself.</p>
 <p>When Squirrel is run, it will execute the "Squirrel Aware" executable it finds passing event flags as arguments. These event flags must be handled in your program's entry point proceeded by an immediate exit. That being said, we need to modify the main.js file in our Electron app to handle these events. At the top of your main.js before anything else is called copy this chunk of code in:</p>
-<pre>var app = require('app');
-var path = require('path');
-var cp = require('child_process');
-
-var handleSquirrelEvent = function() {
-   if (process.platform != 'win32') {
-      return false;
-   }
-
-   function executeSquirrelCommand(args, done) {
-      var updateDotExe = path.resolve(path.dirname(process.execPath), 
-         '..', 'update.exe');
-      var child = cp.spawn(updateDotExe, args, { detached: true });
-      child.on('close', function(code) {
-         done();
-      });
-   };
-
-   function install(done) {
-      var target = path.basename(process.execPath);
-      executeSquirrelCommand(["--createShortcut", target], done);
-   };
-
-   function uninstall(done) {
-      var target = path.basename(process.execPath);
-      executeSquirrelCommand(["--removeShortcut", target], done);
-   };
-
-   var squirrelEvent = process.argv[1];
-   switch (squirrelEvent) {
-      case '--squirrel-install':
-         install(app.quit);
-         return true;
-      case '--squirrel-updated':
-         install(app.quit);
-         return true;
-      case '--squirrel-obsolete':
-         app.quit();
-         return true;
-      case '--squirrel-uninstall':
-         uninstall(app.quit);
-         return true;
-   }
-
-   return false;
-};
-
-if (handleSquirrelEvent()) {
-   return;
+<pre>var app = require('app');
+
+var path = require('path');
+
+var cp = require('child_process');
+
+
+
+var handleSquirrelEvent = function() {
+
+   if (process.platform != 'win32') {
+
+      return false;
+
+   }
+
+
+
+   function executeSquirrelCommand(args, done) {
+
+      var updateDotExe = path.resolve(path.dirname(process.execPath), 
+
+         '..', 'update.exe');
+
+      var child = cp.spawn(updateDotExe, args, { detached: true });
+
+      child.on('close', function(code) {
+
+         done();
+
+      });
+
+   };
+
+
+
+   function install(done) {
+
+      var target = path.basename(process.execPath);
+
+      executeSquirrelCommand(["--createShortcut", target], done);
+
+   };
+
+
+
+   function uninstall(done) {
+
+      var target = path.basename(process.execPath);
+
+      executeSquirrelCommand(["--removeShortcut", target], done);
+
+   };
+
+
+
+   var squirrelEvent = process.argv[1];
+
+   switch (squirrelEvent) {
+
+      case '--squirrel-install':
+
+         install(app.quit);
+
+         return true;
+
+      case '--squirrel-updated':
+
+         install(app.quit);
+
+         return true;
+
+      case '--squirrel-obsolete':
+
+         app.quit();
+
+         return true;
+
+      case '--squirrel-uninstall':
+
+         uninstall(app.quit);
+
+         return true;
+
+   }
+
+
+
+   return false;
+
+};
+
+
+
+if (handleSquirrelEvent()) {
+
+   return;
+
 }</pre>
 <p>The code above will tell Squirrel on install/updated events to add shortcuts to your executable, and to remove them on an uninstall event. The Squirrel Update.exe executable knows how to do this for you. You can do additional things here other than creating shortcuts. For example, Visual Studio Code adds registry values to "Open With Code" when you right-click on something in Windows Explorer.</p>
 <h2>Branding Electron</h2>
@@ -90,27 +135,48 @@ if (handleSquirrelEvent()) {
 <p>As previously noted, Squirrel.Windows is built on NuGet. You need to package up the files you want in a NuGet package and then use Squirrel to create an installer. You should already have nuget.exe in your Staging directory. Open that folder in a console and run the following command:</p>
 <pre>nuget spec</pre>
 <p>This will create a default Package.nuspec file. Open this file in an editor and modify it to look something like this:</p>
-<pre>&lt;?xml version="1.0"?&gt;
-&lt;package &gt;
- &lt;metadata&gt;
-  &lt;id&gt;MyAppNoSpaces&lt;/id&gt;
-  &lt;version&gt;0.1.0&lt;/version&gt;
-  &lt;authors&gt;My Name&lt;/authors&gt;
-  &lt;iconUrl&gt;http://mywebsite.com/icon.png&lt;/iconUrl&gt;
-  &lt;description&gt;MyAppNoSpaces: Does this.&lt;/description&gt;
-  &lt;releaseNotes&gt;Consider release notes using markdown.&lt;/releaseNotes&gt;
-  &lt;copyright&gt;Copyright 2015&lt;/copyright&gt;
-  &lt;dependencies&gt;
-   &lt;!-- important: no dependencies here --&gt;
-  &lt;/dependencies&gt;
- &lt;/metadata&gt;
- &lt;files&gt;
-  &lt;file src="Squirrel.exe" target="lib/net45" /&gt; 
-  &lt;file src="..\node_modules\electron-prebuilt\dist\**\*.*" 
-        exclude="..\node_modules\electron-prebuilt\dist\electron.exe;..\node_modules\electron-prebuilt\dist\resources\default_app\**\*.*"
-        target="lib/net45" /&gt; &lt;!-- lib/net45 is important --&gt;
-  &lt;file src="..\app\**\*.*" target="lib/net45/resources/app" /&gt; 
- &lt;/files&gt;
+<pre>&lt;?xml version="1.0"?&gt;
+
+&lt;package &gt;
+
+ &lt;metadata&gt;
+
+  &lt;id&gt;MyAppNoSpaces&lt;/id&gt;
+
+  &lt;version&gt;0.1.0&lt;/version&gt;
+
+  &lt;authors&gt;My Name&lt;/authors&gt;
+
+  &lt;iconUrl&gt;http://mywebsite.com/icon.png&lt;/iconUrl&gt;
+
+  &lt;description&gt;MyAppNoSpaces: Does this.&lt;/description&gt;
+
+  &lt;releaseNotes&gt;Consider release notes using markdown.&lt;/releaseNotes&gt;
+
+  &lt;copyright&gt;Copyright 2015&lt;/copyright&gt;
+
+  &lt;dependencies&gt;
+
+   &lt;!-- important: no dependencies here --&gt;
+
+  &lt;/dependencies&gt;
+
+ &lt;/metadata&gt;
+
+ &lt;files&gt;
+
+  &lt;file src="Squirrel.exe" target="lib/net45" /&gt; 
+
+  &lt;file src="..\node_modules\electron-prebuilt\dist\**\*.*" 
+
+        exclude="..\node_modules\electron-prebuilt\dist\electron.exe;..\node_modules\electron-prebuilt\dist\resources\default_app\**\*.*"
+
+        target="lib/net45" /&gt; &lt;!-- lib/net45 is important --&gt;
+
+  &lt;file src="..\app\**\*.*" target="lib/net45/resources/app" /&gt; 
+
+ &lt;/files&gt;
+
 &lt;/package&gt;</pre>
 <p>Check out the <a href="http://docs.nuget.org/create/nuspec-reference" target="_blank">nuspec reference</a> page for additional information on creating nuspec files.</p>
 <p><strong>Important notes:</strong></p>
@@ -144,43 +210,78 @@ if (handleSquirrelEvent()) {
 <p>You'll eventually want to prune off old versions of the packages that are no longer used. Also, you don't really have to distribute the old NuGet packages, only Setup.exe, RELEASES, and the latest NuGet package. There is a delta created when you run the above procedure between the previous and latest versions. I assume distributing that along with the updated setup will probably speed up installation times.</p>
 <h3>Automatic Updates</h3>
 <p>The method above involves distributing a new setup file to your users to perform the update. However, you can also configure your app and Squirrel to run updates in the background. Open up your main.js file and put the following <strong>after</strong> you have checked for Squirrel events:</p>
-<pre>var updateDotExe = path.resolve(path.dirname(process.execPath), 
- '..', 'update.exe');
-var child = cp.spawn(updateDotExe, 
-    ["--update", "http://mywebsite.com/releases"], { detached: true });
-child.on('close', function(code) {
-    // anything you need to do when update is done.
+<pre>var updateDotExe = path.resolve(path.dirname(process.execPath), 
+
+ '..', 'update.exe');
+
+var child = cp.spawn(updateDotExe, 
+
+    ["--update", "http://mywebsite.com/releases"], { detached: true });
+
+child.on('close', function(code) {
+
+    // anything you need to do when update is done.
+
 });</pre>
 <p>Using the above script, If Squirrel finds an update at the URL specified then it will automatically download and update the program in the background. The next time the user launches the application they will run the latest version. It might be better to add a "Check for Updates" button to your app, or bring up a dialog stating updates are available and let the user decide. Here is a crude example of how to do this in the main process:</p>
-<pre>var dialog = require('dialog');
-var updateDotExe = path.resolve(path.dirname(process.execPath), 
- '..', 'update.exe');
-var child = cp.spawn(updateDotExe, ["--download", "http://mywebsite.com/releases"], { detached: true });
-var stdout = '';
-child.stdout.setEncoding('utf8');
-var jsonStarted = false;
-child.stdout.on('data', function (d) {
- if (!jsonStarted &amp;&amp; d.startsWith("{")) {
-  jsonStarted = true;
-  return stdout += d; 
- }  
- if (!jsonStarted) {
-  return;
- } 
- return stdout += d; 
-});
-child.on('close', function(code) {
- if (stdout.length &gt; 0) {
-  var data = JSON.parse(stdout); 
-  dialog.showMessageBox({ message: "Update to version " + data.futureVersion + "?",
-   buttons: ["Update", "Not Now"] }, function (choice) {
-    if (choice === 0) { 
-     var child = cp.spawn(updateDotExe, ["--update", "http://mywebsite.com/releases"], { detached: true });
-     dialog.showMessageBox({ message: "The update should be available next time you start the application.",
-      buttons: ["Awesome"] });
-    }
-  });
- }
+<pre>var dialog = require('dialog');
+
+var updateDotExe = path.resolve(path.dirname(process.execPath), 
+
+ '..', 'update.exe');
+
+var child = cp.spawn(updateDotExe, ["--download", "http://mywebsite.com/releases"], { detached: true });
+
+var stdout = '';
+
+child.stdout.setEncoding('utf8');
+
+var jsonStarted = false;
+
+child.stdout.on('data', function (d) {
+
+ if (!jsonStarted &amp;&amp; d.startsWith("{")) {
+
+  jsonStarted = true;
+
+  return stdout += d; 
+
+ }  
+
+ if (!jsonStarted) {
+
+  return;
+
+ } 
+
+ return stdout += d; 
+
+});
+
+child.on('close', function(code) {
+
+ if (stdout.length &gt; 0) {
+
+  var data = JSON.parse(stdout); 
+
+  dialog.showMessageBox({ message: "Update to version " + data.futureVersion + "?",
+
+   buttons: ["Update", "Not Now"] }, function (choice) {
+
+    if (choice === 0) { 
+
+     var child = cp.spawn(updateDotExe, ["--update", "http://mywebsite.com/releases"], { detached: true });
+
+     dialog.showMessageBox({ message: "The update should be available next time you start the application.",
+
+      buttons: ["Awesome"] });
+
+    }
+
+  });
+
+ }
+
 });</pre>
 <p>Of course you might want to just run the updater and then restart the application. I did mention this is a crude example?</p>
 <h2>Additional Resources</h2>

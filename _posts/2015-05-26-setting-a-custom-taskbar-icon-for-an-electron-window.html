@@ -3,11 +3,7 @@ layout: post
 status: publish
 published: true
 title: Setting A Custom Taskbar Icon For an Electron Window
-author:
-  display_name: Shawn Rakowski
-  login: srakowski@live.com
-  email: srakowski@live.com
-  url: ''
+author: Shawn Rakowski
 author_login: srakowski@live.com
 author_email: srakowski@live.com
 wordpress_id: 332
@@ -22,12 +18,18 @@ date_gmt: '2015-05-27 02:55:27 -0500'
 </a></p>
 <p>Feel free to use this lovely piece of art royalty free with no attribution!</p>
 <p>I put this guy in an /images folder in my app directory. I then modified the main.js where I am creating the browser window to swap it in...</p>
-<pre>mainWindow = new BrowserWindow({
-     x: lastWindowState.x,
-     y: lastWindowState.y,
-     width: lastWindowState.width, 
-     height: lastWindowState.height, 
-     <strong>icon: __dirname + '/images/neutron.png',</strong>
+<pre>mainWindow = new BrowserWindow({
+
+     x: lastWindowState.x,
+
+     y: lastWindowState.y,
+
+     width: lastWindowState.width, 
+
+     height: lastWindowState.height, 
+
+     <strong>icon: __dirname + '/images/neutron.png',</strong>
+
      frame: false});</pre>
 <p>Here is what you get:</p>
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/icon.png"><img class="alignnone size-full wp-image-334" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/icon.png" alt="hello icon" width="554" height="323" /><br />
@@ -38,8 +40,10 @@ date_gmt: '2015-05-27 02:55:27 -0500'
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/changes.png"><img class="alignnone size-full wp-image-336" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/changes.png" alt="changes" width="16" height="16" /></a></p>
 <p>If you use this you must pay me a up front royalty payment of $10,000 US dollars.</p>
 <p>To make this an overlay call setOverlayIcon passing the path the .png icon and a description (for screen reader applications) on the BrowserWindow instance like so:</p>
-<pre>mainWindow.setOverlayIcon(
- __dirname + '/images/changes.png', 
+<pre>mainWindow.setOverlayIcon(
+
+ __dirname + '/images/changes.png', 
+
  "unsaved changes");</pre>
 <p>And here is what you get:</p>
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/unsaved.png"><img class="alignnone size-full wp-image-337" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/unsaved.png" alt="unsaved" width="556" height="233" /></a></p>

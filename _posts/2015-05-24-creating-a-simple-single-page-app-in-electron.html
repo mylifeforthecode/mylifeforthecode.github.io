@@ -3,11 +3,7 @@ layout: post
 status: publish
 published: true
 title: Creating a Simple Single Page App in Electron
-author:
-  display_name: Shawn Rakowski
-  login: srakowski@live.com
-  email: srakowski@live.com
-  url: ''
+author: Shawn Rakowski
 author_login: srakowski@live.com
 author_email: srakowski@live.com
 wordpress_id: 303
@@ -25,86 +21,143 @@ date_gmt: '2015-05-24 16:36:33 -0500'
 <p>I am going to build this project using Visual Studio Code. Check out my previous post <a href="http://www.mylifeforthecode.com/getting-started-with-electron-in-visual-studio-code/">Getting Started with Electron in Visual Studio Code</a> to see the initial setup I am working from. I've renamed a few files and added some additional folders to get started. I renamed index.html to app.html (if you do this make sure you update main.js to point to it), and added libs, viewModels, and views folders. The libs folder will hold any third party or custom JavaScript libraries you are building. The viewModels folder will hold the JavaScript files for our ViewModel objects. The views folder will contain the HTML files for our views.</p>
 <p>Suana depends on Knockout for data binding. Download Knockout from the website (<a href="http://knockoutjs.com/">http://knockoutjs.com/</a>) and add it to your libs folder. Next, download Sauna.js from GitHub here: <a href="https://github.com/srakowski/sauna">https://github.com/srakowski/sauna</a>, and add it to your libs folder.</p>
 <p>Add an app.js file to your app folder and then copy the following into your app.html file:</p>
-<pre>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
- &lt;head&gt;
- &lt;title&gt;SPA&lt;/title&gt;
- &lt;/head&gt;
- &lt;body&gt;
- &lt;div id="app"&gt;&lt;/div&gt;
- &lt;script src="libs/knockout-3.3.0.js"&gt;&lt;/script&gt;
- &lt;script src="app.js"&gt;&lt;/script&gt;
- &lt;/body&gt;
+<pre>&lt;!DOCTYPE html&gt;
+
+&lt;html&gt;
+
+ &lt;head&gt;
+
+ &lt;title&gt;SPA&lt;/title&gt;
+
+ &lt;/head&gt;
+
+ &lt;body&gt;
+
+ &lt;div id="app"&gt;&lt;/div&gt;
+
+ &lt;script src="libs/knockout-3.3.0.js"&gt;&lt;/script&gt;
+
+ &lt;script src="app.js"&gt;&lt;/script&gt;
+
+ &lt;/body&gt;
+
 &lt;/html&gt;</pre>
 <p>The app div will host our views, everything else will remain static. This will allow you to add information or universal commands around the content without reloading it with every view change. We should now have everything in place to get started. Your folder structure should look something like this:</p>
-<pre>/my_spa
-      /app
-           /libs
-                knockout-3.3.0.js
-                sauna.js
-           /viewModels
-           /views
-           app.html
-           app.js
-           main.js
-           package.json
-      /node_modules
+<pre>/my_spa
+
+      /app
+
+           /libs
+
+                knockout-3.3.0.js
+
+                sauna.js
+
+           /viewModels
+
+           /views
+
+           app.html
+
+           app.js
+
+           main.js
+
+           package.json
+
+      /node_modules
+
  ...</pre>
 <h3>Creating Views</h3>
 <p>The first thing we need to do is create some views. I am going to create a Home view and a Other view. From the Home view you can navigate to the Other view and vice versa. This will demonstrate the basic navigation model available in Sauna.</p>
 <p>Add homeView.html to your /views folder. Then paste in the following code:</p>
-<pre>&lt;div id="views/homeView" data-vm="viewModels/homeViewModel"&gt; 
- &lt;h1&gt;Home&lt;/h1&gt;
- &lt;p&gt;
-   &lt;button data-bind="click: toOtherView"&gt;OtherView&lt;/button&gt;
- &lt;/p&gt;
- &lt;p&gt;
-   Link to &lt;a href="#views/otherView"&gt;Other View&lt;/a&gt;
- &lt;/p&gt; 
+<pre>&lt;div id="views/homeView" data-vm="viewModels/homeViewModel"&gt; 
+
+ &lt;h1&gt;Home&lt;/h1&gt;
+
+ &lt;p&gt;
+
+   &lt;button data-bind="click: toOtherView"&gt;OtherView&lt;/button&gt;
+
+ &lt;/p&gt;
+
+ &lt;p&gt;
+
+   Link to &lt;a href="#views/otherView"&gt;Other View&lt;/a&gt;
+
+ &lt;/p&gt; 
+
 &lt;/div&gt;</pre>
 <p>When creating a view you will <strong>need to have a root div with an id that is the same as the path to the view</strong>. In the example above homeView.html lives in the /views folder so the id of the div must be "views/homeView" (the .html extension is implied). I may remove this requirement later but maintain backwards compatibility with this tutorial.</p>
 <p>Also, you will <strong>need to add a data-vm attribute on the root div with the path to the view model you want to bind the view to</strong>. In the example above, homeView will be bound to homeViewModel that resides in the viewModels folder. So the data-vm attribute in the root div must be set to "viewModels/homeViewModel" (the .js extension is implied).</p>
 <p>The button will use Knockout data bindings and the Sauna navigator to load the OtherView. The link will do the navigation by changing the hash of the location, which is picked up by Sauna and will cause the same navigation to occur.</p>
 <p>Now, let's add the Other view and point it back to the home view. In your /views folder add an otherView.html file and copy the following into it:</p>
-<pre>&lt;div id="views/otherView" data-vm="viewModels/otherViewModel"&gt;
- &lt;h1&gt;Other&lt;/h1&gt;
- &lt;p&gt;
-  &lt;button data-bind="click: toHomeView"&gt;HomeView&lt;/button&gt;
- &lt;/p&gt; 
- &lt;p&gt;
-  Link to &lt;a href="#views/homeView"&gt;Home View&lt;/a&gt;
- &lt;/p&gt;
+<pre>&lt;div id="views/otherView" data-vm="viewModels/otherViewModel"&gt;
+
+ &lt;h1&gt;Other&lt;/h1&gt;
+
+ &lt;p&gt;
+
+  &lt;button data-bind="click: toHomeView"&gt;HomeView&lt;/button&gt;
+
+ &lt;/p&gt; 
+
+ &lt;p&gt;
+
+  Link to &lt;a href="#views/homeView"&gt;Home View&lt;/a&gt;
+
+ &lt;/p&gt;
+
 &lt;/div&gt;</pre>
 <p>Now it's time to create our view models...</p>
 <h3>Creating View Models</h3>
 <p>Sauna expects the view model to be setup as a <a href="https://nodejs.org/api/modules.html">Node module</a> exporting the constructor. When a view is loaded Sauna looks up the data-vm tag. It adjusts the path a bit and uses require() to load it. It the creates a new instance of the view model and binds it to the root of the view.</p>
 <p>For the example, add homeViewModel.js and otherViewModel.js to the /viewModels folder. Copy the following into homeViewModel.js:</p>
-<pre>module.exports = function () {
- var self = this;
- self.toOtherView = function () {
-  spa.n.navigate("views/otherView");
- } 
+<pre>module.exports = function () {
+
+ var self = this;
+
+ self.toOtherView = function () {
+
+  spa.n.navigate("views/otherView");
+
+ } 
+
 };</pre>
 <p>Next, Copy the following into otherViewModel.js:</p>
-<pre>module.exports = function () {
- var self = this;
- self.toHomeView = function () {
-  spa.n.navigate("views/homeView");
- } 
+<pre>module.exports = function () {
+
+ var self = this;
+
+ self.toHomeView = function () {
+
+  spa.n.navigate("views/homeView");
+
+ } 
+
 };</pre>
 <p>The spa namespace is setup in the section below. The 'n' field refers to the Sauna navigator. For readability I probably should have written out "navigator", but I wanted to type less!</p>
 <h3>Setting Up Sauna</h3>
 <p>Setting up Sauna should be pretty easy. Use require to load the module. Sauna exports a constructor. You must pass to it the element you want to host your views in. It gives you back an object with access to the Navigator via the 'n' field.</p>
 <p>In your app.js file add the following code:</p>
-<pre>var spa = null;
-(function () {
-     document.onreadystatechange = function () {
-          if (document.readyState == "complete") {
-               var sauna = require("./libs/sauna"); 
-               spa = sauna(document.getElementById("app"));
-               spa.n.navigate("views/homeView"); 
-          }
-     }; 
+<pre>var spa = null;
+
+(function () {
+
+     document.onreadystatechange = function () {
+
+          if (document.readyState == "complete") {
+
+               var sauna = require("./libs/sauna"); 
+
+               spa = sauna(document.getElementById("app"));
+
+               spa.n.navigate("views/homeView"); 
+
+          }
+
+     }; 
+
 })();</pre>
 <h3>Running the SPA</h3>
 <p>Launch the app in Electron and you should get the following:</p>

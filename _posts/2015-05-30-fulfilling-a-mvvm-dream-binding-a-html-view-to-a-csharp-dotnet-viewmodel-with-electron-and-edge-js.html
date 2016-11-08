@@ -4,11 +4,7 @@ status: publish
 published: true
 title: 'Fulfilling a MVVM Dream: Binding a HTML View to a C#.NET ViewModel with Electron
   and Edge.js'
-author:
-  display_name: Shawn Rakowski
-  login: srakowski@live.com
-  email: srakowski@live.com
-  url: ''
+author: Shawn Rakowski
 author_login: srakowski@live.com
 author_email: srakowski@live.com
 wordpress_id: 340
@@ -44,58 +40,110 @@ date_gmt: '2015-05-30 18:52:56 -0500'
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture9.png"><img class="alignnone size-full wp-image-367" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture9.png" alt="build" width="810" height="749" /></a></p>
 <p>You may need to adjust the path a little bit depending on how you setup your solution.</p>
 <p>Add a AdderViewModel.cs file to your project, and copy the following code into it:</p>
-<pre>using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
-
-public class AdderViewModel : ViewModelBase
-{
-    private int _number1 = 0;
-    
-    public int InNumber1
-    {
-        get { return _number1; }
-        set 
-        {
-            _number1 = value;
-            RaisePropertyChanged();               
-        }
-    }
-    
-    private int _number2 = 0;
-    
-    public int InNumber2
-    {
-        get { return _number2; }
-        set
-        {
-            _number2 = value;
-            RaisePropertyChanged();
-        }
-    }
-    
-    private int _outNumber = 0;
-    
-    public int OutNumber
-    {
-        get { return _outNumber; }
-        set
-        {
-            _outNumber = value;
-            RaisePropertyChanged();
-        }
-    }
-    
-    public RelayCommand AddCommand { get; set; }
-
-    public AdderViewModel()
-    {
-        AddCommand = new RelayCommand(Add);            
-    }
-
-    private void Add()
-    {
-        OutNumber = InNumber1 + InNumber2;
-    }       
+<pre>using GalaSoft.MvvmLight;
+
+using GalaSoft.MvvmLight.Command;
+
+
+
+public class AdderViewModel : ViewModelBase
+
+{
+
+    private int _number1 = 0;
+
+    
+
+    public int InNumber1
+
+    {
+
+        get { return _number1; }
+
+        set 
+
+        {
+
+            _number1 = value;
+
+            RaisePropertyChanged();               
+
+        }
+
+    }
+
+    
+
+    private int _number2 = 0;
+
+    
+
+    public int InNumber2
+
+    {
+
+        get { return _number2; }
+
+        set
+
+        {
+
+            _number2 = value;
+
+            RaisePropertyChanged();
+
+        }
+
+    }
+
+    
+
+    private int _outNumber = 0;
+
+    
+
+    public int OutNumber
+
+    {
+
+        get { return _outNumber; }
+
+        set
+
+        {
+
+            _outNumber = value;
+
+            RaisePropertyChanged();
+
+        }
+
+    }
+
+    
+
+    public RelayCommand AddCommand { get; set; }
+
+
+
+    public AdderViewModel()
+
+    {
+
+        AddCommand = new RelayCommand(Add);            
+
+    }
+
+
+
+    private void Add()
+
+    {
+
+        OutNumber = InNumber1 + InNumber2;
+
+    }       
+
 }</pre>
 <p><strong>Note the lack of namespace!</strong> If you use a namespace it is no big deal, but you'll need to adjust the bind command in the view later.  Build your project. The ViewModels.dll and all the MvvmLight dependencies should now show up in your viewmodels folder. It should look something like this:</p>
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture11.png"><img class="alignnone size-full wp-image-370" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture11.png" alt="Capture" width="408" height="632" /><br />
@@ -103,28 +151,50 @@ public class AdderViewModel : ViewModelBase
 <p>That is everything you need to setup your view model.</p>
 <h3>The View</h3>
 <p>The next step is to create a view for the Adder. This is a bit easier than the set for the view model because we don't need to engage with regular old Visual Studio. Open your index.html file and add the following code:</p>
-<pre>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
- &lt;head&gt;
-  &lt;title&gt;Coldstone Example&lt;/title&gt;
- &lt;/head&gt;
- &lt;body&gt;
-  &lt;div id="adder"&gt; 
-  &lt;label&gt;Number1: &lt;input type="number" data-bind="value: InNumber1" /&gt;&lt;/label&gt;&lt;br /&gt;
-  &lt;br /&gt; 
-  &lt;label&gt;Number2: &lt;input type="number" data-bind="value: InNumber2" /&gt;&lt;/label&gt;&lt;br /&gt;
-  &lt;br /&gt;
-  &lt;button data-bind="command: AddCommand" /&gt;Add&lt;/button&gt;&lt;br /&gt;
-  &lt;br /&gt;
-  Output: &lt;span data-bind="text: OutNumber"&gt;&lt;/span&gt; 
-  &lt;/div&gt; 
-  &lt;div id="output-text"&gt;&lt;/div&gt;
-  &lt;script&gt;
-   var Coldstone = require('./libs/coldstone'); 
-   var cs = new Coldstone(__dirname + "/viewmodels/ViewModels.dll");
-   cs.bind("adder", "AdderViewModel"); 
-  &lt;/script&gt; 
- &lt;/body&gt;
+<pre>&lt;!DOCTYPE html&gt;
+
+&lt;html&gt;
+
+ &lt;head&gt;
+
+  &lt;title&gt;Coldstone Example&lt;/title&gt;
+
+ &lt;/head&gt;
+
+ &lt;body&gt;
+
+  &lt;div id="adder"&gt; 
+
+  &lt;label&gt;Number1: &lt;input type="number" data-bind="value: InNumber1" /&gt;&lt;/label&gt;&lt;br /&gt;
+
+  &lt;br /&gt; 
+
+  &lt;label&gt;Number2: &lt;input type="number" data-bind="value: InNumber2" /&gt;&lt;/label&gt;&lt;br /&gt;
+
+  &lt;br /&gt;
+
+  &lt;button data-bind="command: AddCommand" /&gt;Add&lt;/button&gt;&lt;br /&gt;
+
+  &lt;br /&gt;
+
+  Output: &lt;span data-bind="text: OutNumber"&gt;&lt;/span&gt; 
+
+  &lt;/div&gt; 
+
+  &lt;div id="output-text"&gt;&lt;/div&gt;
+
+  &lt;script&gt;
+
+   var Coldstone = require('./libs/coldstone'); 
+
+   var cs = new Coldstone(__dirname + "/viewmodels/ViewModels.dll");
+
+   cs.bind("adder", "AdderViewModel"); 
+
+  &lt;/script&gt; 
+
+ &lt;/body&gt;
+
 &lt;/html&gt;</pre>
 <p>Some notes:</p>
 <ol>

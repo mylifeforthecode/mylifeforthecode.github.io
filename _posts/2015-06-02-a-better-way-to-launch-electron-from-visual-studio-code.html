@@ -3,11 +3,7 @@ layout: post
 status: publish
 published: true
 title: A Better Way To Launch Electron from Visual Studio Code
-author:
-  display_name: Shawn Rakowski
-  login: srakowski@live.com
-  email: srakowski@live.com
-  url: ''
+author: Shawn Rakowski
 author_login: srakowski@live.com
 author_email: srakowski@live.com
 wordpress_id: 395
@@ -23,23 +19,40 @@ date_gmt: '2015-06-03 03:18:08 -0500'
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture4.png"><img class="alignnone size-full wp-image-250" src="http://www.mylifeforthecode.com/wp-content/uploads/2015/05/Capture4.png" alt="debugger" width="925" height="366" /></a></p>
 <p>Alternatively, you can do Ctrl+Shift+P and type Configure selecting Debug: Configure from the list.</p>
 <p>If you have setup your application in the same manner as I outlined in <a href="http://www.mylifeforthecode.com/getting-started-with-electron-in-visual-studio-code/">Getting Started with Electron in Visual Studio Code</a> you should be able to copy the following into your launch.json file:</p>
-<pre>{
-    "version": "0.1.0",
-    "configurations": [
-        { 
-            "name": "Launch Electron App",
-            "type": "node",
-            "program": "app/main.js", // important
-            "stopOnEntry": false,
-            "args": [],
-            "cwd": ".",
-            // next line is very important
-            "runtimeExecutable": "node_modules/electron-prebuilt/dist/electron.exe",
-            "runtimeArguments": [],
-            "env": { }, 
-            "sourceMaps": false
-        } 
-    ]
+<pre>{
+
+    "version": "0.1.0",
+
+    "configurations": [
+
+        { 
+
+            "name": "Launch Electron App",
+
+            "type": "node",
+
+            "program": "app/main.js", // important
+
+            "stopOnEntry": false,
+
+            "args": [],
+
+            "cwd": ".",
+
+            // next line is very important
+
+            "runtimeExecutable": "node_modules/electron-prebuilt/dist/electron.exe",
+
+            "runtimeArguments": [],
+
+            "env": { }, 
+
+            "sourceMaps": false
+
+        } 
+
+    ]
+
 }</pre>
 <p>The "runtimeExecutable" is supposed to allow you to point to a local Node executable instead of the one used on the path. However, because electron is compatible with Node arguments you can point this path at an electron.exe file instead. <strong>The program needs to be set to your main.js file.</strong> Visual Studio Code checks to make sure that program is set to a JavaScript file, passing the app directory here doesn't work. While most of the documentation tells you to pass the app folder, Electron also allows you to pass the main.js file instead (since that is what package.json points to anyways).</p>
 <p>One other note is that the "stopOnEntry" will not work with this.</p>

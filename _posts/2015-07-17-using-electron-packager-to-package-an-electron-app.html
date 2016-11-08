@@ -3,11 +3,7 @@ layout: post
 status: publish
 published: true
 title: Using Electron-Packager To Package an Electron App
-author:
-  display_name: Shawn Rakowski
-  login: srakowski@live.com
-  email: srakowski@live.com
-  url: ''
+author: Shawn Rakowski
 author_login: srakowski@live.com
 author_email: srakowski@live.com
 wordpress_id: 586
@@ -18,7 +14,8 @@ date_gmt: '2015-07-18 00:36:00 -0500'
 <p>I wrote an article a month or two ago called <a href="http://www.mylifeforthecode.com/creating-a-windows-distribution-of-an-electron-app-using-squirrel/">Creating a Windows Distribution of an Electron App using Squirrel</a>. In it I manually gathered the pieces I needed to create the package to be distributed and hack the executable's resources by hand. This was cumbersome and I recently learned there is a pretty cool project called <a href="https://github.com/maxogden/electron-packager">electron-packager</a> that will do a lot of this for you. I took it for a spin tonight.</p>
 <h4>Get Electron-Packager</h4>
 <p>With the beauty of most things that are Node, electron-packager is available via npm. Here is the command to get it:</p>
-<pre><code>npm i electron-packager -g
+<pre><code>npm i electron-packager -g
+
 </code></pre>
 <p>Of course, this can also be saved to the development work space if needed.</p>
 <h4>Use Electron-Packager</h4>
