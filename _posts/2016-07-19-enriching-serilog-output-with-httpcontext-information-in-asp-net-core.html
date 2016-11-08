@@ -20,9 +20,9 @@ date_gmt: '2016-07-20 04:04:50 -0500'
 <p>My immediate thought was to use IHttpContextAccessor since it is advertised as HttpContext.Current's hipper replacement. However, I hit a roadblock (probably just a mental one) when I remembered that the Serilog logger was being configured in the Startup class's constructor, prior to registering services where I'd have stuff to inject, meaning I would not have access to IHttpContextAccessor without changing around how and where Serilog was being configured, which I didn't want to do. A real pickle right?</p>
 <p>Luckily enough I found that there is a builtin fixture to Serilog called LogContext which allows you to push and pop values to create an enriched context for logging (aptly named, am I right?). If you combine this tool with some custom ASP.NET Middleware (which I learned to do from this post: <a href="https://www.exceptionnotfound.net/writing-custom-middleware-in-asp-net-core-1-0/">https://www.exceptionnotfound.net/writing-custom-middleware-in-asp-net-core-1-0/</a>) you can easily enrich a Serilog log with information from the HttpContext.</p>
 <p>To demonstrate, let's suppose you want to log the address of every incoming request in every log. You may setup the Log in Serilog like this:</p>
-<p>https://gist.github.com/srakowski/78506962a24580b04f591cabb24a9727</p>
+<p>{% gist 78506962a24580b04f591cabb24a9727 %}</p>
 <p>Serilog will look for a "Address" value to replace "{Address}" with in the the log, which is what we want, but we have to provide this to it. This is done via middleware and LogContext like so:</p>
-<p>https://gist.github.com/srakowski/b37ff816285dc98139604070aa30497c</p>
+<p>{% gist.github.com b37ff816285dc98139604070aa30497c %}</p>
 <p>Now if you add a logging call to your controller you can see the IP address is populated in log as expected. Here's a screenshot of my own tribulation proving this works:</p>
 <p><a href="http://www.mylifeforthecode.com/wp-content/uploads/2016/07/example.png"><img class="alignnone size-full wp-image-1748" src="http://www.mylifeforthecode.com/wp-content/uploads/2016/07/example.png" alt="example" width="827" height="57" /></a></p>
 <p>Take a look at my full example on GitHub here: <a href="https://github.com/srakowski/serilog-httpcontext-example">https://github.com/srakowski/serilog-httpcontext-example</a></p>
