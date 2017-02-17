@@ -16,7 +16,7 @@
 title: My Life For The Code
 email: srakowski@live.com
 description: > # this means to ignore newlines until "baseurl:"
-  The ramblings of yet another software developer/wantrapreneur.
+  The ramblings of a software developer/wantrapreneur.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://www.mylifeforthecode.com" # the base hostname & protocol for your site
 twitter_username: Shwany
