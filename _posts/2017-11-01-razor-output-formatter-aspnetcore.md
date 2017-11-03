@@ -47,7 +47,7 @@ Huzzah! Now we have everything we need to put this together!
 
 Lets say we have a simple database of Gargoyles (my fav 90's cartoon), a super simple dummy active record may look something like this:
 
-https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoyle-cs
+<script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoyle-cs"></script>
 
 And you have a controller that serves up the complete list of Gargoyles or an individual Gargoyle by name:
 
@@ -134,7 +134,7 @@ Now we can provide the .HTML extension to our request and get back nice HTML. If
 
 You can see a demonstration of the behavior in this video:
 
-{% include youtube.html id="v2bsZ7LSR10" %}
+https://youtu.be/v2bsZ7LSR10
 
 ## Thank you!
 
