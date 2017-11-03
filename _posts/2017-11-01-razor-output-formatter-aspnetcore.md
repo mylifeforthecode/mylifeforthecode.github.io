@@ -47,7 +47,7 @@ Huzzah! Now we have everything we need to put this together!
 
 Lets say we have a simple database of Gargoyles (my fav 90's cartoon), a super simple dummy active record may look something like this:
 
-https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoyle-cs
+<a href="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoyle-cs">https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoyle-cs</a>
 
 And you have a controller that serves up the complete list of Gargoyles or an individual Gargoyle by name:
 
