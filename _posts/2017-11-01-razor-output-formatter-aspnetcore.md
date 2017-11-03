@@ -134,7 +134,7 @@ Now we can provide the .HTML extension to our request and get back nice HTML. If
 
 You can see a demonstration of the behavior in this video:
 
-https://youtu.be/v2bsZ7LSR10
+{% include youtube.html id="v2bsZ7LSR10" %}
 
 ## Thank you!
 
