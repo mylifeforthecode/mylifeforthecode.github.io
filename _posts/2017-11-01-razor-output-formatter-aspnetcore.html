@@ -1,0 +1,144 @@
+---
+layout: post
+status: publish
+published: true
+title: Using Razor With Asp.Net Core Api Content Negotiation and FormatFilter
+author: Shawn Rakowski
+author_login: srakowski@live.com
+author_email: srakowski@live.com
+---
+
+<p><em>Published: 01-NOV-2017</em></p>
+
+<p>I've been working with Asp.Net Core lately to make API calls from a Vue.js SPA. When returning an object result I've enjoyed how Asp.Net Core MVC automatically negotiates JSON as the response format. Recently, however, I've desired to hit the same endpoint to get back the same data but optionally in a nicely formatted HTML doc, assuming I send the appropriate Accept:text/html header that is. Technically, I could have conditionally returned an ObjectResult <strong>XOR</strong> a <code>View()</code>, but HTML should be just another content format for an API, and there is no reason the Controller should have to concern itself with it. Essentially, I wanted Asp.Net Core MVC to return JSON by default when <code>return Ok(model);</code> or just <code>return model;</code> except when I have sent the Accept:text/html header <strong>AND</strong> have created a Razor view to pump the Model through.</p>
+
+<p>To accomplish this I needed to look at how Asp.Net Core does content negotiation. There are a few articles on this and the Asp.Net Core docs <a href="https://docs.microsoft.com/en-us/aspnet/core/mvc/models/formatting">give an overview</a>. By default, Asp.Net Core returns JSON for every ObjectResult except where additional formatters are present and the content has been negotiated. Looking around the web, <a href="https://wildermuth.com/2016/03/16/Content_Negotiation_in_ASP_NET_Core">another great Shawn of the world has provided a blog post on the same topic.</a> These examples, while providing a good overview, only really show the Xml formatter that is provided by Microsoft via Nuget for XML. This is great if Xml is what you want, but I to create an HTML doc via Razor I had to dig deeper.</p>
+
+<p>In the same Microsoft docs half of the answer is provided. To run our ObjectResult through some custom code we need a <a href="https://docs.microsoft.com/en-us/aspnet/core/mvc/advanced/custom-formatters">Custom Formatter</a>. This allows us to override some methods and convert some object to our desired output. They give an example of converting some contact model to a vcard that describes most of what you need to know on this front. Great, half way there!</p>
+
+<p>This is where the slog of putting together a bunch of disparate things hit me, and why I decided to record it in a blog post in case I ever needed it again.</p>
+
+<p>The next step was to figure out how I can convert some object into a rendered Razor view. This involved figuring out how to invoke the Razor Engine manually to render the object. Luckily this answer was provided by some searching and I landed on this article by ppolyzos: <a href="https://ppolyzos.com/2016/09/09/asp-net-core-render-view-to-string/">https://ppolyzos.com/2016/09/09/asp-net-core-render-view-to-string/</a>. Which gives a good exmaple how to use the IRazorViewEngine (injected by Asp.Net Core DI) to render a Razor view to a string. Aha! This is the other half I needed!</p>
+
+<p>While I said that Custom Formatters and rendering Razor Views to a string are each 1/2 the solution they are more like 45% each of the solution. There is a remaining 10% I had to put together.</p>
+
+<p>Registering output formatters in Asp.Net Core Startup.cs looks something like this (from the Vcard example):</p>
+
+<pre><code>services.AddMvc(options =&gt;
+{
+    options.OutputFormatters.Insert(0, new VcardOutputFormatter());
+};
+</code></pre>
+
+<p>Because we have to instantiate and insert the output formatter we lose our Dependency Injection capabilities. So how do we get at our IRazorViewEngine?</p>
+
+<p>To my luck the answer was right there in the documentation...</p>
+
+<pre><code>You can't do constructor dependency injection in a formatter class. For example, you can't get a logger by adding a logger parameter to the constructor. To access services, you have to use the context object that gets passed in to your methods. A code example below shows how to do this.
+</code></pre>
+
+<p>Essentially, you have access to the services via the HttpContext, the example they provide retrieves the logger:</p>
+
+<pre><code>IServiceProvider serviceProvider = context.HttpContext.RequestServices;
+var logger = serviceProvider.GetService(typeof(ILogger&lt;VcardOutputFormatter&gt;)) as ILogger;
+</code></pre>
+
+<p>Huzzah! Now we have everything we need to put this together!</p>
+
+<h2 id="example">Example</h2>
+
+<p>Lets say we have a simple database of Gargoyles (my fav 90's cartoon), a super simple dummy active record may look something like this:</p>
+
+<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoyle-cs</p>
+
+<p>And you have a controller that serves up the complete list of Gargoyles or an individual Gargoyle by name:</p>
+
+<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoylescontroller-cs</p>
+
+<p>Running the above model and controller through a base Asp.Net Core MVC project you get output like this:</p>
+
+<p>For <code>/api/gargoyles</code> you get:</p>
+
+<pre><code class="[{"name":"Goliath","color":"RebeccaPurple","isLeader":true},{"name":"Hudson","color":"Brown","isLeader":false},{"name":"Lexington","color":"Olive","isLeader":false},{"name":"Broadway","color":"Cyan","isLeader":false},{"name":"Brooklyn","color":"FireBrick","isLeader":false},{"name":"Bronx","color":"MediumSlateBlue","isLeader":false}]``` language-[{"name":"Goliath","color":"RebeccaPurple","isLeader":true},{"name":"Hudson","color":"Brown","isLeader":false},{"name":"Lexington","color":"Olive","isLeader":false},{"name":"Broadway","color":"Cyan","isLeader":false},{"name":"Brooklyn","color":"FireBrick","isLeader":false},{"name":"Bronx","color":"MediumSlateBlue","isLeader":false}]```">For `/api/gargoyles/lexington` you get:
+</code></pre>
+
+<p>{"name":"Lexington","color":"Olive","isLeader":false}```</p>
+
+<p>Now what if I want these to models (the enumerable and the individual Gargoyle) to be returned as an HTML doc? Using [P<a href="https://www.getpostman.com/">Postman</a> or some other tool I can modify the Accept header to request the <code>text/html</code> mime time, but Asp.Net, knowing nothing about this, will return JSON. So we can create a couple of Razor views, one for an individual Gargoyle:</p>
+
+<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoyle-cshtml</p>
+
+<p>and one for an enumerable of Gargoyles:</p>
+
+<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoyles-cshtml</p>
+
+<p>However, MVC has no tie into these without using the <code>View()</code> method on the controller, and we don't want to have to put some conditional logic in our controller to handle this. This is where the custom formatter comes in:</p>
+
+<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-razoroutputformatter-cs</p>
+
+<p>This combines elements from the Custom Formatter code and the example of how to render a Razor view to a string. Now all we need to do is modify the AddMvc options in our Startup.cs to register our formatter and we're ready to go!:</p>
+
+<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-startup-cs</p>
+
+<p><em>Note: I use <code>Add(value)</code> vs. <code>Insert(0, value)</code> (as the custom formatter shows) because I want JSON to take precedence</em>.</p>
+
+<p>In the example I am explicitly providing a way for the RazorOutputFormatter to resolve the name of a View. This could be done via convention based on the Type name or possibly by using Attributes + Reflection on the models you would pass through this (like custom serializer attributes). I am also assuming that I can write any type out throug this method. <strong>The OutputFormatter class does provide overrideable methods to control what types or requests this formatter supports</strong>. Look up the <code>CanWriteType</code> and <code>CanWriteResult</code> methods for more information on how to do this.</p>
+
+<p>Now, a request through postman that looks like this:</p>
+
+<pre><code>GET /api/gargoyles/lexington HTTP/1.1
+Host: localhost:58357
+Accept: text/html
+Cache-Control: no-cache
+Postman-Token: 8b97ee35-5b86-09b7-8b8a-f83abca9a032
+</code></pre>
+
+<p>(<em>Note the Accept header</em>)</p>
+
+<p>Will return Html like this:</p>
+
+<pre><code>&lt;h2&gt;Lexington&lt;/h2&gt;
+&lt;hr /&gt;
+&lt;h3&gt;About&lt;/h3&gt;
+&lt;p&gt;
+    This gargoyle is  
+    &lt;span&gt;not&lt;/span&gt;  the leader of the Gargoyles.
+&lt;/p&gt;
+&lt;p&gt;
+    This gargoyle's color is:
+
+    &lt;div style="width:100px; height:100px; background-color: Olive"&gt;&lt;/div&gt;
+&lt;/p&gt;
+</code></pre>
+
+<p>And every other, non <code>text/html</code> gives us back our JSON. Great this is exactly what I wanted!</p>
+
+<h2 id="formatfilter">FormatFilter</h2>
+
+<p>One thing I discovered with this is that it's a pain to use Postman to get html that I cannot easily inspect. What it would be nice to do is open up my browser and get back HTML when I want to view HTML and JSON when I make a normal request. To do this I discovered that Asp.Net core provides a way to pass the negotiatied format type as part of the route. This requires a couple of attribute changes to our controller:</p>
+
+<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoylescontroller-ff-cs</p>
+
+<p><code>[HttpGet("~/api/{_:regex(^(gargoyles)$)}.{format?}")]</code> <strong>WAT?</strong></p>
+
+<p>In the documentation for FormatFilter included in the <a href="https://docs.microsoft.com/en-us/aspnet/core/mvc/models/formatting">Formatting Response Data documentation</a> they provide a nice example of getting a single object after an id. What they don't tell you is how to use this on the base Get() route and that .{format?} must come after a route parameter. If you attempt to do something like <code>[Route("api/[controller].{format?}")]</code> you get some exceptions. After some Googling + trial &amp; error I landed on this hacky mess where you provide a default route with a constraint, ugly but it works! To show I did some due diligence... I found this GitHub Issue on the topic with no meaningful resolution: <a href="https://github.com/aspnet/Mvc/issues/3553">https://github.com/aspnet/Mvc/issues/3553</a>.</p>
+
+<p>One final thing we have to do is to tell MVC what Mime type the .html extension should resolve to. This is also done when configuring MVC in the Startup.cs file:</p>
+
+<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-startup-ff-cs</p>
+
+<p>Huzzah!</p>
+
+<p>Now we can provide the .HTML extension to our request and get back nice HTML. If we do not provide an extension, or if we provide the .JSON extension then we get JSON. Perfect!</p>
+
+<p>You can see a demonstration of the behavior in this video:</p>
+
+<p>https://youtu.be/v2bsZ7LSR10</p>
+
+<h2 id="thankyou">Thank you!</h2>
+
+<p>That's all for this post, thanks for checking it out!</p>
+
+<p>You can find a full example of this code on GitHub here: <a href="https://github.com/srakowski/RazorOutputFormatterExample">https://github.com/srakowski/RazorOutputFormatterExample</a></p>
+
+<p>Cheers!</p>
