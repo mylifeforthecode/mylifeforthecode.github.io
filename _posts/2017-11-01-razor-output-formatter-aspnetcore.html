@@ -56,11 +56,45 @@ var logger = serviceProvider.GetService(typeof(ILogger&lt;VcardOutputFormatter&g
 
 <p>For <code>/api/gargoyles</code> you get:</p>
 
-<pre><code>[{"name":"Goliath","color":"RebeccaPurple","isLeader":true},{"name":"Hudson","color":"Brown","isLeader":false},{"name":"Lexington","color":"Olive","isLeader":false},{"name":"Broadway","color":"Cyan","isLeader":false},{"name":"Brooklyn","color":"FireBrick","isLeader":false},{"name":"Bronx","color":"MediumSlateBlue","isLeader":false}]``` language-[{"name":"Goliath","color":"RebeccaPurple","isLeader":true},{"name":"Hudson","color":"Brown","isLeader":false},{"name":"Lexington","color":"Olive","isLeader":false},{"name":"Broadway","color":"Cyan","isLeader":false},{"name":"Brooklyn","color":"FireBrick","isLeader":false},{"name":"Bronx","color":"MediumSlateBlue","isLeader":false}]</code></pre>
+<pre><code>[
+    {
+        "name":"Goliath",
+        "color":"RebeccaPurple",
+        "isLeader":true
+    },
+    {
+        "name":"Hudson",
+        "color":"Brown",
+        "isLeader":false},
+    {
+        "name":"Lexington",
+        "color":"Olive",
+        "isLeader":false
+    },
+    {
+        "name":"Broadway",
+        "color":"Cyan",
+        "isLeader":false
+    },
+    {
+        "name":"Brooklyn",
+        "color":"FireBrick",
+        "isLeader":false
+    },
+    {
+        "name":"Bronx",
+        "color":"MediumSlateBlue",
+        "isLeader":false
+    }
+]</code></pre>
 
 <p>For <code>/api/gargoyles/lexington</code>you get:</p>
 
-<p>{"name":"Lexington","color":"Olive","isLeader":false}</p>
+<pre><code>{
+    "name":"Lexington",
+    "color":"Olive",
+    "isLeader":false
+}</code></pre>
 
 <p>Now what if I want these to models (the enumerable and the individual Gargoyle) to be returned as an HTML doc? Using [P<a href="https://www.getpostman.com/">Postman</a> or some other tool I can modify the Accept header to request the <code>text/html</code> mime time, but Asp.Net, knowing nothing about this, will return JSON. So we can create a couple of Razor views, one for an individual Gargoyle:</p>
 
