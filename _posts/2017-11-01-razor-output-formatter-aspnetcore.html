@@ -49,11 +49,11 @@ var logger = serviceProvider.GetService(typeof(ILogger&lt;VcardOutputFormatter&g
 
 <p>Lets say we have a simple database of Gargoyles (my fav 90's cartoon), a super simple dummy active record may look something like this:</p>
 
-<p>{% gist 2a47cf32c53f3320512b64cce208ec57 gargoyle.cs %}</p>
+<p><<script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57.js?file=Gargoyle.cs"></script></p>
 
 <p>And you have a controller that serves up the complete list of Gargoyles or an individual Gargoyle by name:</p>
 
-<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoylescontroller-cs</p>
+<p><script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57.js?file=GargoylesController.cs"></script></p>
 
 <p>Running the above model and controller through a base Asp.Net Core MVC project you get output like this:</p>
 
@@ -66,19 +66,19 @@ var logger = serviceProvider.GetService(typeof(ILogger&lt;VcardOutputFormatter&g
 
 <p>Now what if I want these to models (the enumerable and the individual Gargoyle) to be returned as an HTML doc? Using [P<a href="https://www.getpostman.com/">Postman</a> or some other tool I can modify the Accept header to request the <code>text/html</code> mime time, but Asp.Net, knowing nothing about this, will return JSON. So we can create a couple of Razor views, one for an individual Gargoyle:</p>
 
-<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoyle-cshtml</p>
+<p><script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57.js?file=Gargoyle.cshtml"></script></p>
 
 <p>and one for an enumerable of Gargoyles:</p>
 
-<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoyles-cshtml</p>
+<p><script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57.js?file=Gargoyles.cshtml"></script></p>
 
 <p>However, MVC has no tie into these without using the <code>View()</code> method on the controller, and we don't want to have to put some conditional logic in our controller to handle this. This is where the custom formatter comes in:</p>
 
-<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-razoroutputformatter-cs</p>
+<p><script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57.js?file=RazorOutputFormatter.cs"></script></p>
 
 <p>This combines elements from the Custom Formatter code and the example of how to render a Razor view to a string. Now all we need to do is modify the AddMvc options in our Startup.cs to register our formatter and we're ready to go!:</p>
 
-<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-startup-cs</p>
+<p><script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57.js?file=Startup.cs"></script></p>
 
 <p><em>Note: I use <code>Add(value)</code> vs. <code>Insert(0, value)</code> (as the custom formatter shows) because I want JSON to take precedence</em>.</p>
 
@@ -117,7 +117,7 @@ Postman-Token: 8b97ee35-5b86-09b7-8b8a-f83abca9a032
 
 <p>One thing I discovered with this is that it's a pain to use Postman to get html that I cannot easily inspect. What it would be nice to do is open up my browser and get back HTML when I want to view HTML and JSON when I make a normal request. To do this I discovered that Asp.Net core provides a way to pass the negotiatied format type as part of the route. This requires a couple of attribute changes to our controller:</p>
 
-<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-gargoylescontroller-ff-cs</p>
+<p><script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57.js?file=GargoylesController-ff.cs"></script></p>
 
 <p><code>[HttpGet("~/api/{_:regex(^(gargoyles)$)}.{format?}")]</code> <strong>WAT?</strong></p>
 
@@ -125,7 +125,7 @@ Postman-Token: 8b97ee35-5b86-09b7-8b8a-f83abca9a032
 
 <p>One final thing we have to do is to tell MVC what Mime type the .html extension should resolve to. This is also done when configuring MVC in the Startup.cs file:</p>
 
-<p>https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57#file-startup-ff-cs</p>
+<p><script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57?file=Startup-ff.cs"></script></p>
 
 <p>Huzzah!</p>
 
