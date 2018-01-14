@@ -26,5 +26,5 @@ disqus:
 
 # Build settings
 markdown: kramdown
-theme: jekyll-theme-midnight
+theme: minima
 permalink: :slug/
