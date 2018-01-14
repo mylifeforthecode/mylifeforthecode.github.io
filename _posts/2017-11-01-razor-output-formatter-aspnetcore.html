@@ -49,7 +49,7 @@ var logger = serviceProvider.GetService(typeof(ILogger&lt;VcardOutputFormatter&g
 
 <p>Lets say we have a simple database of Gargoyles (my fav 90's cartoon), a super simple dummy active record may look something like this:</p>
 
-<p><<script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57.js?file=Gargoyle.cs"></script></p>
+<p><script src="https://gist.github.com/srakowski/2a47cf32c53f3320512b64cce208ec57.js?file=Gargoyle.cs"></script></p>
 
 <p>And you have a controller that serves up the complete list of Gargoyles or an individual Gargoyle by name:</p>
 
@@ -59,10 +59,11 @@ var logger = serviceProvider.GetService(typeof(ILogger&lt;VcardOutputFormatter&g
 
 <p>For <code>/api/gargoyles</code> you get:</p>
 
-<pre><code class="[{"name":"Goliath","color":"RebeccaPurple","isLeader":true},{"name":"Hudson","color":"Brown","isLeader":false},{"name":"Lexington","color":"Olive","isLeader":false},{"name":"Broadway","color":"Cyan","isLeader":false},{"name":"Brooklyn","color":"FireBrick","isLeader":false},{"name":"Bronx","color":"MediumSlateBlue","isLeader":false}]``` language-[{"name":"Goliath","color":"RebeccaPurple","isLeader":true},{"name":"Hudson","color":"Brown","isLeader":false},{"name":"Lexington","color":"Olive","isLeader":false},{"name":"Broadway","color":"Cyan","isLeader":false},{"name":"Brooklyn","color":"FireBrick","isLeader":false},{"name":"Bronx","color":"MediumSlateBlue","isLeader":false}]```">For `/api/gargoyles/lexington` you get:
-</code></pre>
+<pre><code>[{"name":"Goliath","color":"RebeccaPurple","isLeader":true},{"name":"Hudson","color":"Brown","isLeader":false},{"name":"Lexington","color":"Olive","isLeader":false},{"name":"Broadway","color":"Cyan","isLeader":false},{"name":"Brooklyn","color":"FireBrick","isLeader":false},{"name":"Bronx","color":"MediumSlateBlue","isLeader":false}]``` language-[{"name":"Goliath","color":"RebeccaPurple","isLeader":true},{"name":"Hudson","color":"Brown","isLeader":false},{"name":"Lexington","color":"Olive","isLeader":false},{"name":"Broadway","color":"Cyan","isLeader":false},{"name":"Brooklyn","color":"FireBrick","isLeader":false},{"name":"Bronx","color":"MediumSlateBlue","isLeader":false}]</code></pre>
 
-<p>{"name":"Lexington","color":"Olive","isLeader":false}```</p>
+<p>For <code>/api/gargoyles/lexington</code>you get:</p>
+
+<p>{"name":"Lexington","color":"Olive","isLeader":false}</p>
 
 <p>Now what if I want these to models (the enumerable and the individual Gargoyle) to be returned as an HTML doc? Using [P<a href="https://www.getpostman.com/">Postman</a> or some other tool I can modify the Accept header to request the <code>text/html</code> mime time, but Asp.Net, knowing nothing about this, will return JSON. So we can create a couple of Razor views, one for an individual Gargoyle:</p>
 
