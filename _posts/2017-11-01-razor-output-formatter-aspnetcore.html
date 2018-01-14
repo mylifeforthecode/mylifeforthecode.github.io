@@ -8,8 +8,6 @@ author_login: srakowski@live.com
 author_email: srakowski@live.com
 ---
 
-<p><em>Published: 01-NOV-2017</em></p>
-
 <p>I've been working with Asp.Net Core lately to make API calls from a Vue.js SPA. When returning an object result I've enjoyed how Asp.Net Core MVC automatically negotiates JSON as the response format. Recently, however, I've desired to hit the same endpoint to get back the same data but optionally in a nicely formatted HTML doc, assuming I send the appropriate Accept:text/html header that is. Technically, I could have conditionally returned an ObjectResult <strong>XOR</strong> a <code>View()</code>, but HTML should be just another content format for an API, and there is no reason the Controller should have to concern itself with it. Essentially, I wanted Asp.Net Core MVC to return JSON by default when <code>return Ok(model);</code> or just <code>return model;</code> except when I have sent the Accept:text/html header <strong>AND</strong> have created a Razor view to pump the Model through.</p>
 
 <p>To accomplish this I needed to look at how Asp.Net Core does content negotiation. There are a few articles on this and the Asp.Net Core docs <a href="https://docs.microsoft.com/en-us/aspnet/core/mvc/models/formatting">give an overview</a>. By default, Asp.Net Core returns JSON for every ObjectResult except where additional formatters are present and the content has been negotiated. Looking around the web, <a href="https://wildermuth.com/2016/03/16/Content_Negotiation_in_ASP_NET_Core">another great Shawn of the world has provided a blog post on the same topic.</a> These examples, while providing a good overview, only really show the Xml formatter that is provided by Microsoft via Nuget for XML. This is great if Xml is what you want, but I to create an HTML doc via Razor I had to dig deeper.</p>
@@ -34,8 +32,7 @@ author_email: srakowski@live.com
 
 <p>To my luck the answer was right there in the documentation...</p>
 
-<pre><code>You can't do constructor dependency injection in a formatter class. For example, you can't get a logger by adding a logger parameter to the constructor. To access services, you have to use the context object that gets passed in to your methods. A code example below shows how to do this.
-</code></pre>
+<pre>You can't do constructor dependency injection in a formatter class. For example, you can't get a logger by adding a logger parameter to the constructor. To access services, you have to use the context object that gets passed in to your methods. A code example below shows how to do this.</pre>
 
 <p>Essentially, you have access to the services via the HttpContext, the example they provide retrieves the logger:</p>
 
